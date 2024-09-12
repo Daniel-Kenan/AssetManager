@@ -163,7 +163,7 @@ export default function FileExplorer() {
   )
 }
 
-function DownloadIcon(props) {
+function DownloadIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
     <svg
       {...props}
@@ -185,7 +185,7 @@ function DownloadIcon(props) {
 }
 
 
-function FileIcon(props) {
+function FileIcon(props:React.SVGProps<SVGSVGElement>) {
   return (
     <svg
       {...props}
@@ -206,7 +206,7 @@ function FileIcon(props) {
 }
 
 
-function FilesIcon(props) {
+function FilesIcon(props:React.SVGProps<SVGSVGElement>) {
   return (
     <svg
       {...props}
@@ -228,7 +228,7 @@ function FilesIcon(props) {
 }
 
 
-function FolderIcon(props) {
+function FolderIcon(props:React.SVGProps<SVGSVGElement>) {
   return (
     <svg
       {...props}
@@ -248,7 +248,7 @@ function FolderIcon(props) {
 }
 
 
-function HomeIcon(props) {
+function HomeIcon(props:React.SVGProps<SVGSVGElement>) {
   return (
     <svg
       {...props}
@@ -269,7 +269,7 @@ function HomeIcon(props) {
 }
 
 
-function ImagesIcon(props) {
+function ImagesIcon(props:React.SVGProps<SVGSVGElement>) {
   return (
     <svg
       {...props}
@@ -292,7 +292,7 @@ function ImagesIcon(props) {
 }
 
 
-function MenuIcon(props) {
+function MenuIcon(props:React.SVGProps<SVGSVGElement>) {
   return (
     <svg
       {...props}
@@ -314,7 +314,7 @@ function MenuIcon(props) {
 }
 
 
-function MusicIcon(props) {
+function MusicIcon(props:React.SVGProps<SVGSVGElement>) {
   return (
     <svg
       {...props}
@@ -336,7 +336,7 @@ function MusicIcon(props) {
 }
 
 
-function PlusIcon(props) {
+function PlusIcon(props:React.SVGProps<SVGSVGElement>) {
   return (
     <svg
       {...props}
@@ -357,7 +357,7 @@ function PlusIcon(props) {
 }
 
 
-function UploadIcon(props) {
+function UploadIcon(props:React.SVGProps<SVGSVGElement>) {
   return (
     <svg
       {...props}
@@ -379,7 +379,7 @@ function UploadIcon(props) {
 }
 
 
-function VideoIcon(props) {
+function VideoIcon(props:React.SVGProps<SVGSVGElement>) {
   return (
     <svg
       {...props}
