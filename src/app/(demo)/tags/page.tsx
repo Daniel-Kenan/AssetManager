@@ -38,8 +38,8 @@ export default function TagsPage() {
       </Breadcrumb>
       {/* <DataTableDemo/> */}
       {/* <GalleryComponent/> */}
-      {/* <KanbanBoard /> */}
-      <FileExplorer/>
+      <KanbanBoard />
+      {/* <FileExplorer/> */}
     </ContentLayout>
   );
 }
