@@ -31,7 +31,7 @@ export function Sidebar() {
           asChild
         >
           <Link href="/dashboard" className="flex items-center gap-2">
-            <PanelsTopLeft className="w-6 h-6 mr-1" />
+          <img src="https://www.nextgensell.com/static/assets/img/favicon.png" alt="Description of image" className="w-6 h-6 mr-1" />
             <h1
               className={cn(
                 "font-bold text-lg whitespace-nowrap transition-[transform,opacity,display] ease-in-out duration-300",

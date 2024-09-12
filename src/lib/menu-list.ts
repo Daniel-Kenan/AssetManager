@@ -3,9 +3,10 @@ import {
   Users,
   Settings,
   Bookmark,
-  SquarePen,
+  NotebookPen,
   LayoutGrid,
-  LucideIcon
+  LucideIcon,SquareParking,
+  SquareKanban,Inbox,FolderClosed
 } from "lucide-react";
 
 type Submenu = {
@@ -45,11 +46,50 @@ export function getMenuList(pathname: string): Group[] {
       groupLabel: "Contents",
       menus: [
         {
+          href: "/categories",
+          label: "Messages",
+          active: pathname.includes("/categories"),
+          icon: Inbox,
+          submenus: []
+        },
+        {
+          href: "/categories",
+          label: "Kanban",
+          active: pathname.includes("/categories"),
+          icon: SquareKanban,
+          submenus: []
+        },
+        {
+          href: "/tags",
+          label: "Personal Notes",
+          active: pathname.includes("/tags"),
+          icon: NotebookPen,
+          submenus: []
+        },
+        {
+          href: "/tags",
+          label: "Files Explorer",
+          active: pathname.includes("/tags"),
+          icon: FolderClosed,
+          submenus: []
+        }
+        ,
+        {
           href: "",
-          label: "Posts",
+          label: "Projects",
           active: pathname.includes("/posts"),
-          icon: SquarePen,
+          icon: SquareParking,
           submenus: [
+            {
+              href: "/posts",
+              label: "All Posts",
+              active: pathname === "/posts"
+            },
+            {
+              href: "/posts/new",
+              label: "New Post",
+              active: pathname === "/posts/new"
+            },
             {
               href: "/posts",
               label: "All Posts",
@@ -61,20 +101,6 @@ export function getMenuList(pathname: string): Group[] {
               active: pathname === "/posts/new"
             }
           ]
-        },
-        {
-          href: "/categories",
-          label: "Projects",
-          active: pathname.includes("/categories"),
-          icon: Bookmark,
-          submenus: []
-        },
-        {
-          href: "/tags",
-          label: "Kanban board",
-          active: pathname.includes("/tags"),
-          icon: Tag,
-          submenus: []
         }
       ]
     },
