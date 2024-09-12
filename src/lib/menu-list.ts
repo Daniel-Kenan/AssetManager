@@ -53,23 +53,23 @@ export function getMenuList(pathname: string): Group[] {
           submenus: []
         },
         {
-          href: "/categories",
+          href: "/kanban",
           label: "Kanban",
-          active: pathname.includes("/categories"),
+          active: pathname.includes("/kanban"),
           icon: SquareKanban,
           submenus: []
         },
         {
-          href: "/tags",
+          href: "/personalnotes",
           label: "Personal Notes",
-          active: pathname.includes("/tags"),
+          active: pathname.includes("/personalnotes"),
           icon: NotebookPen,
           submenus: []
         },
         {
-          href: "/tags",
+          href: "/file-explorer",
           label: "Files Explorer",
-          active: pathname.includes("/tags"),
+          active: pathname.includes("/file-explorer"),
           icon: FolderClosed,
           submenus: []
         }
