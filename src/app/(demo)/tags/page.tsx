@@ -1,6 +1,9 @@
 import Link from "next/link";
 
-import PlaceholderContent from "@/components/demo/placeholder-content";
+import GalleryComponent from "@/components/component/gallery-component";
+import KanbanBoard from "@/components/kanban-board";
+import DataTableDemo from "@/components/tasks/table";
+import FileExplorer  from "@/components/component/file-explorer";
 import { ContentLayout } from "@/components/admin-panel/content-layout";
 import {
   Breadcrumb,
@@ -33,7 +36,10 @@ export default function TagsPage() {
           </BreadcrumbItem>
         </BreadcrumbList>
       </Breadcrumb>
-      <PlaceholderContent />
+      {/* <DataTableDemo/> */}
+      {/* <GalleryComponent/> */}
+      {/* <KanbanBoard /> */}
+      <FileExplorer/>
     </ContentLayout>
   );
 }

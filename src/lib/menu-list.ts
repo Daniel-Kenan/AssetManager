@@ -64,14 +64,14 @@ export function getMenuList(pathname: string): Group[] {
         },
         {
           href: "/categories",
-          label: "Categories",
+          label: "Projects",
           active: pathname.includes("/categories"),
           icon: Bookmark,
           submenus: []
         },
         {
           href: "/tags",
-          label: "Tags",
+          label: "Kanban board",
           active: pathname.includes("/tags"),
           icon: Tag,
           submenus: []
