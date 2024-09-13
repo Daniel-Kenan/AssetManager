@@ -1,5 +1,6 @@
 import Link from "next/link";
-import FileExplorer from "@/components/component/file-explorer";
+
+import CompanyManagement from "@/components/company-management-with-picture";
 import { ContentLayout } from "@/components/admin-panel/content-layout";
 import {
   Breadcrumb,
@@ -10,10 +11,19 @@ import {
   BreadcrumbSeparator
 } from "@/components/ui/breadcrumb";
 
-export default function PersonalNotes() {
+
+
+
+
+export default function DashboardPage() {
   return (
-    <ContentLayout title="File Explorer">
-      <FileExplorer/>
+    <ContentLayout title="Dashboard">
+        
+
+  <CompanyManagement />
+   
+
+     
     </ContentLayout>
   );
 }

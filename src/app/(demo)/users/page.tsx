@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-import PlaceholderContent from "@/components/demo/placeholder-content";
+import PlaceholderContent from "@/hooks/user-management";
 import { ContentLayout } from "@/components/admin-panel/content-layout";
 import {
   Breadcrumb,

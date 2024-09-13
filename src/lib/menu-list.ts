@@ -6,7 +6,8 @@ import {
   NotebookPen,
   LayoutGrid,
   LucideIcon,SquareParking,
-  SquareKanban,Inbox,FolderClosed
+  SquareKanban,Inbox,FolderClosed,
+  Building2 
 } from "lucide-react";
 
 type Submenu = {
@@ -46,9 +47,9 @@ export function getMenuList(pathname: string): Group[] {
       groupLabel: "Contents",
       menus: [
         {
-          href: "/categories",
+          href: "/messages",
           label: "Messages",
-          active: pathname.includes("/categories"),
+          active: pathname.includes("/messages"),
           icon: Inbox,
           submenus: []
         },
@@ -105,22 +106,29 @@ export function getMenuList(pathname: string): Group[] {
       ]
     },
     {
+      groupLabel: "Clients",
+      menus: [
+        {
+          href: "/companies",
+          label: "Companies",
+          active: pathname.includes("/companies"),
+          icon:  Building2 ,
+          submenus: []
+        }
+      ]
+    }
+    ,
+    {
       groupLabel: "Settings",
       menus: [
         {
           href: "/users",
-          label: "Users",
+          label: "Collaborators",
           active: pathname.includes("/users"),
           icon: Users,
           submenus: []
         },
-        {
-          href: "/account",
-          label: "Account",
-          active: pathname.includes("/account"),
-          icon: Settings,
-          submenus: []
-        }
+        
       ]
     }
   ];
