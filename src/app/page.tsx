@@ -26,12 +26,16 @@ export default function HomePage() {
               className="rounded-full w-8 h-8 bg-background"
               asChild
             >
-             
+              <Link href="https://github.com/your-repo-url" target="_blank" rel="noopener noreferrer">
+                <GitHubLogoIcon className="h-4 w-4" />
+                <span className="sr-only">GitHub</span>
+              </Link>
             </Button>
             <ModeToggle />
           </nav>
         </div>
       </header>
+      
       <main className="min-h-[calc(100vh-57px-97px)] flex-1">
         <div className="container relative pb-10">
           <section className="mx-auto flex max-w-[980px] flex-col items-center gap-2 py-8 md:py-12 md:pb-8 lg:py-24 lg:pb-6">
@@ -44,7 +48,7 @@ export default function HomePage() {
             <div className="flex w-full items-center justify-center space-x-4 py-4 md:pb-6">
               <Button variant="default" asChild>
                 <Link href="/dashboard">
-                 Proceed
+                  Proceed
                   <ArrowRightIcon className="ml-2" />
                 </Link>
               </Button>
@@ -59,20 +63,33 @@ export default function HomePage() {
               </Button>
             </div>
           </section>
+          
           <div className="w-full flex justify-center relative">
-            <Image
-              src="/Screenshot.png"
-              width={1080}
-              height={608}
-              alt="demo"
-              priority
-              className="border rounded-xl shadow-sm dark:hidden"
-            />
-           
-         
+            <div className="relative group">
+              <div className="absolute -inset-0.5 bg-gradient-to-r from-pink-600 to-purple-600 rounded-xl blur opacity-0 group-hover:opacity-75 transition duration-1000 group-hover:duration-200"></div>
+              <div className="relative">
+                <Image
+                  src="/Screenshot.png"
+                  width={1080}
+                  height={608}
+                  alt="demo"
+                  priority
+                  className="rounded-xl shadow-sm transition duration-300 group-hover:scale-[1.02] group-hover:shadow-xl dark:hidden"
+                />
+                <Image
+                  src="/Screenshot-dark.png"
+                  width={1080}
+                  height={608}
+                  alt="demo"
+                  priority
+                  className="rounded-xl shadow-sm transition duration-300 group-hover:scale-[1.02] group-hover:shadow-xl hidden dark:block"
+                />
+              </div>
+            </div>
           </div>
         </div>
       </main>
+      
       <footer className="py-6 md:py-0 border-t border-border/40">
         <div className="container flex flex-col items-center justify-center gap-4 md:h-24 md:flex-row">
           <p className="text-balance text-center text-sm leading-loose text-muted-foreground">
@@ -87,7 +104,7 @@ export default function HomePage() {
             </Link>
             . The source code is available on{" "}
             <Link
-              href=""
+              href="https://github.com/your-repo-url"
               target="_blank"
               rel="noopener noreferrer"
               className="font-medium underline underline-offset-4"
