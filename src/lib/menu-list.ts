@@ -82,8 +82,8 @@ export function getMenuList(pathname: string): Group[] {
           icon: SquareParking,
           submenus: [
             {
-              href: "/posts",
-              label: "All Posts",
+              href: "/Projects",
+              label: "- Projects Summary -",
               active: pathname === "/posts"
             },
             {
