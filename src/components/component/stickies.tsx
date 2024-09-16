@@ -93,7 +93,7 @@ export function Stickies() {
       <header className="bg-white shadow-md py-4 px-6 sticky top-0 z-10">
         <div className="flex items-center justify-between">
           <h2 className="text-1xl font-bold">
-          &quot;By failing to prepare, you are preparing to fail.&quot;
+          "By failing to prepare, you are preparing to fail."
             <span className="font-normal"> — Benjamin Franklin</span>
           </h2>
           <Button onClick={createNote}>
