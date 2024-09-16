@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { PanelsTopLeft } from "lucide-react";
-
+import Image from "next/image";
 import { cn } from "@/lib/utils";
 import { useStore } from "@/hooks/use-store";
 import { Button } from "@/components/ui/button";
@@ -31,7 +31,12 @@ export function Sidebar() {
           asChild
         >
           <Link href="/dashboard" className="flex items-center gap-2">
-          <img src="https://www.nextgensell.com/static/assets/img/favicon.png" alt="Description of image" className="w-6 h-6 mr-1" />
+          <Image
+              src="/a-removebg-preview.png"
+              width={50}
+              height={50}
+              alt="demo-mobile"
+            />
             <h1
               className={cn(
                 "font-bold text-lg whitespace-nowrap transition-[transform,opacity,display] ease-in-out duration-300",

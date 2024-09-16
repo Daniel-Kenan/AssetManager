@@ -33,7 +33,7 @@ export default function FileExplorer() {
 
   const fetchFiles = () => {
     setIsLoading(true)
-    fetch('http://localhost:5000/files')
+    fetch('https://media.nextgensell.com/files')
       .then(response => response.json())
       .then(data => {
         setAllFiles(data)
@@ -94,12 +94,12 @@ export default function FileExplorer() {
 
     if (['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp'].includes(fileExtension || '')) {
       // Image preview
-      setFileContent(`http://localhost:5000/files/${filePath}`)
+      setFileContent(`https://media.nextgensell.com/files/${filePath}`)
       setIsFileDialogOpen(true)
       setIsFileLoading(false)
     } else if (['txt', 'md', 'js', 'ts', 'html', 'css', 'json'].includes(fileExtension || '')) {
       // Text file preview
-      fetch(`http://localhost:5000/files/${filePath}`)
+      fetch(`https://media.nextgensell.com/files/${filePath}`)
         .then(response => response.text())
         .then(content => {
           setFileContent(content)
@@ -119,7 +119,7 @@ export default function FileExplorer() {
 
   const downloadFile = (filePath: string) => {
     const link = document.createElement('a')
-    link.href = `http://localhost:5000/files/${filePath}`
+    link.href = `https://media.nextgensell.com/files/${filePath}`
     link.download = filePath.split('/').pop() || ''
     document.body.appendChild(link)
     link.click()
@@ -164,14 +164,8 @@ export default function FileExplorer() {
               <UploadIcon className="h-4 w-4 mr-2" />
               Upload
             </Button>
-            <Button variant="outline" size="sm">
-              <PlusIcon className="h-4 w-4 mr-2" />
-              Create
-            </Button>
-            <Button variant="outline" size="sm">
-              <DownloadIcon className="h-4 w-4 mr-2" />
-              Download
-            </Button>
+           
+           
           </div>
         </div>
         <div className="flex-1 overflow-auto p-4 md:p-6">

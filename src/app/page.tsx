@@ -15,7 +15,14 @@ export default function HomePage() {
             href="/"
             className="flex justify-start items-center hover:opacity-85 transition-opacity duration-300"
           >
-            <PanelsTopLeft className="w-6 h-6 mr-3" />
+            <Image
+              src="/a-removebg-preview.png"
+              width={50}
+              height={50}
+              alt="demo-mobile"
+              // className="w-6 h-6 mr-1" 
+            />
+            
             <span className="font-bold">Uniteer</span>
             <span className="sr-only">Uniteer</span>
           </Link>

@@ -1,14 +1,27 @@
 "use client"
 
 import { useState } from "react"
-import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd"
+import { DragDropContext, Droppable, Draggable, DropResult } from "react-beautiful-dnd"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { PlusIcon, ArchiveIcon, TrashIcon } from "lucide-react"
 
+interface Note {
+  id: string
+  title: string
+  content: string
+  color: string
+}
+
+interface NewNote {
+  title: string
+  content: string
+  color: string
+}
+
 export function Stickies() {
-  const [notes, setNotes] = useState([
+  const [notes, setNotes] = useState<Note[]>([
     {
       id: "1",
       title: "Grocery List",
@@ -28,7 +41,7 @@ export function Stickies() {
       color: "bg-blue-300",
     },
   ])
-  const [newNote, setNewNote] = useState({
+  const [newNote, setNewNote] = useState<NewNote>({
     title: "",
     content: "",
     color: "bg-yellow-300",
@@ -51,19 +64,19 @@ export function Stickies() {
     }
   }
 
-  const deleteNote = (id) => {
+  const deleteNote = (id: string) => {
     setNotes(notes.filter((note) => note.id !== id))
   }
 
-  const archiveNote = (id) => {
+  const archiveNote = (id: string) => {
     setNotes(notes.map((note) => (note.id === id ? { ...note, color: "bg-gray-300" } : note)))
   }
 
-  const changeColor = (id, color) => {
+  const changeColor = (id: string, color: string) => {
     setNotes(notes.map((note) => (note.id === id ? { ...note, color } : note)))
   }
 
-  const onDragEnd = (result) => {
+  const onDragEnd = (result: DropResult) => {
     if (!result.destination) {
       return
     }
@@ -80,7 +93,7 @@ export function Stickies() {
       <header className="bg-white shadow-md py-4 px-6 sticky top-0 z-10">
         <div className="flex items-center justify-between">
           <h2 className="text-1xl font-bold">
-            "By failing to prepare, you are preparing to fail."
+          &quot;By failing to prepare, you are preparing to fail.&quot;
             <span className="font-normal"> — Benjamin Franklin</span>
           </h2>
           <Button onClick={createNote}>
