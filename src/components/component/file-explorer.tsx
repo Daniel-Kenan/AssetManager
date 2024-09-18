@@ -131,26 +131,77 @@ export default function FileExplorer() {
     setIsGridView(!isGridView)
   }
 
-  const handleUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const files = event.target.files
+  const handleUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
     if (files) {
-      console.log('Files to upload:', files)
-      // Here you would typically send the files to your server
-      // After upload is complete, you might want to refresh the file list
-      // fetchFiles()
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        console.log('Uploading file:', file.name);
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('folder', currentPath.join('/')); // Upload to the current directory
+  
+        try {
+          const response = await fetch('https://media.nextgensell.com/files/upload', {
+            method: 'POST',
+            body: formData
+          });
+  
+          const result = await response.json();
+  
+          if (response.ok) {
+            console.log(`File uploaded successfully: ${result.file_path}`);
+            if (result.access_url) {
+              console.log('File is publicly accessible at:', result.access_url);
+            }
+          } else {
+            console.error('Upload failed:', result.message);
+          }
+        } catch (error) {
+          console.error('An error occurred:', error);
+        }
+      }
+      // Refresh the file list after all uploads are complete
+      fetchFiles();
     }
   }
 
   const handleCreateFolder = () => {
     if (newFolderName) {
-      console.log('Creating folder:', newFolderName, 'in path:', currentPath.join('/'))
-      setNewFolderName('')
-      setIsCreateFolderDialogOpen(false)
-      // Here you would typically send a request to your server to create the folder
-      // After folder is created, you might want to refresh the file list
-      // fetchFiles()
+      const folderPath = currentPath.join('/') 
+      console.log('Creating folder:', newFolderName, 'in path:', folderPath);
+  
+      // Clear input and close dialog
+      setNewFolderName('');
+      setIsCreateFolderDialogOpen(false);
+  
+      // Send a request to create the folder on the server
+      fetch('https://media.nextgensell.com/folders', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          folder: folderPath ? `${folderPath}/${newFolderName}`:newFolderName
+        }),
+      })
+        .then(response => {
+          if (!response.ok) {
+            throw new Error('Failed to create folder');
+          }
+          return response.json();
+        })
+        .then(data => {
+          console.log('Folder created successfully:', data);
+          // Refresh the file list after folder creation
+          fetchFiles();
+        })
+        .catch(error => {
+          console.error('Error creating folder:', error);
+        });
     }
-  }
+  };
+  
 
   const handleRename = () => {
     if (itemToRename && newName) {
@@ -173,12 +224,32 @@ export default function FileExplorer() {
   }
 
   const handleDelete = (item: TreeNode) => {
-    console.log('Deleting', item.name)
-    // Here you would typically show a confirmation dialog
-    // and then send a request to your server to delete the item
-    // After deletion, you might want to refresh the file list
-    // fetchFiles()
+    const confirmDelete = window.confirm(`Are you sure you want to delete ${item.type === 'folder' ? 'this folder and all its contents?' : 'this file?'}`);
+    const folderPath = currentPath.join('/');
+    let toDel = folderPath ? `${folderPath}/${item.name}` : item.name;
+    if (confirmDelete) {
+      const url = item.type === 'folder'
+        ? 'https://media.nextgensell.com/folders'
+        : `https://media.nextgensell.com/files/${encodeURIComponent(toDel)}`;
+  
+      fetch(url, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: item.type === 'folder'
+          ? JSON.stringify({ folder: `${toDel}` })
+          : null,
+      })
+        .then(response => response.json())
+        .then(data => {
+          console.log('Deletion successful:', data);
+          fetchFiles();  // Refresh the file list after deletion
+        })
+        .catch(error => console.error('Error deleting item:', error));
+    }
   }
+  
 
   return (
     <div className="flex h-screen w-full">
