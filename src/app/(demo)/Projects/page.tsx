@@ -88,7 +88,7 @@ export default function ProjectOverview() {
                   type="search"
                   placeholder="Search projects..."
                   className="w-full"
-                  startDecorator={<Search className="h-4 w-4 text-gray-400" />}
+                 
                 />
               </div>
               <DropdownMenu>
