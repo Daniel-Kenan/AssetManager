@@ -1,9 +1,12 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Breadcrumb, BreadcrumbList, BreadcrumbItem, BreadcrumbLink, BreadcrumbSeparator } from "@/components/ui/breadcrumb"
-import { FolderIcon, FileIcon, ChevronLeftIcon, ChevronRightIcon, Loader2Icon } from 'lucide-react'
+import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from "@/components/ui/context-menu"
+import { FolderIcon, FileIcon, ChevronLeftIcon, ChevronRightIcon, Loader2Icon, LayoutGridIcon, LayoutListIcon, UploadIcon, FolderPlusIcon } from 'lucide-react'
 
 interface FileItem {
   name: string
@@ -21,6 +24,13 @@ export default function FileExplorer() {
   const [currentPath, setCurrentPath] = useState<string[]>([])
   const [currentNodes, setCurrentNodes] = useState<TreeNode[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [isGridView, setIsGridView] = useState(true)
+  const [newFolderName, setNewFolderName] = useState('')
+  const [isCreateFolderDialogOpen, setIsCreateFolderDialogOpen] = useState(false)
+  const [isRenameDialogOpen, setIsRenameDialogOpen] = useState(false)
+  const [itemToRename, setItemToRename] = useState<TreeNode | null>(null)
+  const [newName, setNewName] = useState('')
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     fetchFiles()
@@ -35,10 +45,10 @@ export default function FileExplorer() {
     fetch('https://media.nextgensell.com/files')
       .then(response => response.json())
       .then(data => {
-        console.log('Fetched data:', data) // Debugging line
+        console.log('Fetched data:', data)
         const tree = buildFileTree(data)
         setFileTree(tree)
-        setCurrentNodes(tree) // Initially show the root
+        setCurrentNodes(tree)
       })
       .catch(error => console.error('Error fetching files:', error))
       .finally(() => setIsLoading(false))
@@ -48,12 +58,12 @@ export default function FileExplorer() {
     const root: TreeNode[] = []
 
     entries.forEach((item) => {
-      console.log('Processing item:', item) // Debugging line
+      console.log('Processing item:', item)
       const pathParts = item.name.split('/').filter(Boolean)
       addToTree(root, pathParts, item)
     })
 
-    console.log('Built file tree:', root) // Debugging line
+    console.log('Built file tree:', root)
     return root
   }
 
@@ -66,7 +76,7 @@ export default function FileExplorer() {
       node = {
         name: first,
         type: rest.length === 0 ? item.type : 'folder',
-        children: rest.length > 0 ? [] : [] // Ensure children property exists
+        children: rest.length > 0 ? [] : []
       }
       tree.push(node)
     }
@@ -80,31 +90,31 @@ export default function FileExplorer() {
   }
 
   const navigateToCurrentPath = () => {
-    console.log('Navigating to:', currentPath) // Debugging line
+    console.log('Navigating to:', currentPath)
     let currentNode = fileTree
     for (const folder of currentPath) {
       const nextNode = currentNode.find(n => n.name === folder && n.type === 'folder')
       if (nextNode && nextNode.children) {
         currentNode = nextNode.children
       } else {
-        console.log('Folder not found:', folder) // Debugging line
-        currentNode = [] // Reset to an empty array if folder is not found
+        console.log('Folder not found:', folder)
+        currentNode = []
         break
       }
     }
-    console.log('Current nodes:', currentNode) // Debugging line
+    console.log('Current nodes:', currentNode)
     setCurrentNodes(currentNode)
   }
 
   const handleFolderClick = (folderName: string) => {
-    console.log('Folder clicked:', folderName) // Debugging line
+    console.log('Folder clicked:', folderName)
     setCurrentPath([...currentPath, folderName])
   }
 
   const handleFileClick = (fileName: string) => {
     const filePath = [...currentPath, fileName].join('/')
     location.href = "https://media.nextgensell.com/files/"+filePath;
-    console.log('File clicked:', filePath) // Logs the full path of the file
+    console.log('File clicked:', filePath)
   }
 
   const handleBackClick = () => {
@@ -116,6 +126,59 @@ export default function FileExplorer() {
     if (a.type === 'file' && b.type === 'folder') return 1
     return a.name.localeCompare(b.name)
   })
+
+  const toggleView = () => {
+    setIsGridView(!isGridView)
+  }
+
+  const handleUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files
+    if (files) {
+      console.log('Files to upload:', files)
+      // Here you would typically send the files to your server
+      // After upload is complete, you might want to refresh the file list
+      // fetchFiles()
+    }
+  }
+
+  const handleCreateFolder = () => {
+    if (newFolderName) {
+      console.log('Creating folder:', newFolderName, 'in path:', currentPath.join('/'))
+      setNewFolderName('')
+      setIsCreateFolderDialogOpen(false)
+      // Here you would typically send a request to your server to create the folder
+      // After folder is created, you might want to refresh the file list
+      // fetchFiles()
+    }
+  }
+
+  const handleRename = () => {
+    if (itemToRename && newName) {
+      console.log('Renaming', itemToRename.name, 'to', newName)
+      setNewName('')
+      setIsRenameDialogOpen(false)
+      setItemToRename(null)
+      // Here you would typically send a request to your server to rename the item
+      // After renaming, you might want to refresh the file list
+      // fetchFiles()
+    }
+  }
+
+  const handleMove = (item: TreeNode) => {
+    console.log('Moving', item.name, 'to a new location')
+    // Here you would typically open a dialog to select the new location
+    // and then send a request to your server to move the item
+    // After moving, you might want to refresh the file list
+    // fetchFiles()
+  }
+
+  const handleDelete = (item: TreeNode) => {
+    console.log('Deleting', item.name)
+    // Here you would typically show a confirmation dialog
+    // and then send a request to your server to delete the item
+    // After deletion, you might want to refresh the file list
+    // fetchFiles()
+  }
 
   return (
     <div className="flex h-screen w-full">
@@ -147,6 +210,39 @@ export default function FileExplorer() {
                 <ChevronRightIcon className="h-4 w-4" />
               </Button>
             )}
+            <Button variant="outline" size="sm" onClick={toggleView}>
+              {isGridView ? <LayoutListIcon className="h-4 w-4" /> : <LayoutGridIcon className="h-4 w-4" />}
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => fileInputRef.current?.click()}>
+              <UploadIcon className="h-4 w-4 mr-2" />
+              Upload
+            </Button>
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleUpload}
+              className="hidden"
+              multiple
+            />
+            <Dialog open={isCreateFolderDialogOpen} onOpenChange={setIsCreateFolderDialogOpen}>
+              <DialogTrigger asChild>
+                <Button variant="outline" size="sm">
+                  <FolderPlusIcon className="h-4 w-4 mr-2" />
+                  New Folder
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Create New Folder</DialogTitle>
+                </DialogHeader>
+                <Input
+                  value={newFolderName}
+                  onChange={(e) => setNewFolderName(e.target.value)}
+                  placeholder="Enter folder name"
+                />
+                <Button onClick={handleCreateFolder}>Create</Button>
+              </DialogContent>
+            </Dialog>
           </div>
         </div>
 
@@ -159,30 +255,66 @@ export default function FileExplorer() {
           ) : sortedNodes.length === 0 ? (
             <div className="text-center text-gray-500 dark:text-gray-400">This folder is empty.</div>
           ) : (
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+            <div className={isGridView ? 
+              "grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5" : 
+              "flex flex-col space-y-2"
+            }>
               {sortedNodes.map((item, index) => (
-                <div 
-                  key={index} 
-                  className="group relative rounded-md border border-gray-200 bg-white p-4 shadow-sm transition-all hover:border-gray-300 dark:border-gray-800 dark:bg-gray-950 dark:hover:border-gray-700 cursor-pointer"
-                  onClick={() => item.type === 'folder' ? handleFolderClick(item.name) : handleFileClick(item.name)}
-                >
-                  <div className="flex h-20 w-full items-center justify-center">
-                    {item.type === 'folder' ? (
-                      <FolderIcon className="h-12 w-12 text-gray-500 group-hover:text-gray-700 dark:text-gray-400 dark:group-hover:text-gray-300" />
-                    ) : (
-                      <FileIcon className="h-12 w-12 text-gray-500 group-hover:text-gray-700 dark:text-gray-400 dark:group-hover:text-gray-300" />
-                    )}
-                  </div>
-                  <div className="mt-4 text-center">
-                    <h3 className="text-sm font-medium text-gray-900 dark:text-gray-50 truncate">{item.name}</h3>
-                    <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">{item.type}</p>
-                  </div>
-                </div>
+                <ContextMenu key={index}>
+                  <ContextMenuTrigger>
+                    <div 
+                      className={`group relative rounded-md border border-gray-200 bg-white p-4 shadow-sm transition-all hover:border-gray-300 dark:border-gray-800 dark:bg-gray-950 dark:hover:border-gray-700 cursor-pointer ${
+                        isGridView ? '' : 'flex items-center space-x-4'
+                      }`}
+                      onClick={() => item.type === 'folder' ? handleFolderClick(item.name) : handleFileClick(item.name)}
+                    >
+                      <div className={`flex ${isGridView ? 'h-20 w-full' : 'h-10 w-10'} items-center justify-center`}>
+                        {item.type === 'folder' ? (
+                          <FolderIcon className={`${isGridView ? 'h-12 w-12' : 'h-6 w-6'} text-gray-500 group-hover:text-gray-700 dark:text-gray-400 dark:group-hover:text-gray-300`} />
+                        ) : (
+                          <FileIcon className={`${isGridView ? 'h-12 w-12' : 'h-6 w-6'} text-gray-500 group-hover:text-gray-700 dark:text-gray-400 dark:group-hover:text-gray-300`} />
+                        )}
+                      </div>
+                      <div className={isGridView ? "mt-4 text-center" : "flex-grow"}>
+                        <h3 className="text-sm font-medium text-gray-900 dark:text-gray-50 truncate">{item.name}</h3>
+                        {isGridView && <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">{item.type}</p>}
+                      </div>
+                    </div>
+                  </ContextMenuTrigger>
+                  <ContextMenuContent>
+                    <ContextMenuItem onSelect={() => {
+                      setItemToRename(item)
+                      setNewName(item.name)
+                      setIsRenameDialogOpen(true)
+                    }}>
+                      Rename
+                    </ContextMenuItem>
+                    <ContextMenuItem onSelect={() => handleMove(item)}>
+                      Move
+                    </ContextMenuItem>
+                    <ContextMenuItem onSelect={() => handleDelete(item)}>
+                      Delete
+                    </ContextMenuItem>
+                  </ContextMenuContent>
+                </ContextMenu>
               ))}
             </div>
           )}
         </div>
       </div>
+      <Dialog open={isRenameDialogOpen} onOpenChange={setIsRenameDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Rename {itemToRename?.type}</DialogTitle>
+          </DialogHeader>
+          <Input
+            value={newName}
+            onChange={(e) => setNewName(e.target.value)}
+            placeholder="Enter new name"
+          />
+          <Button onClick={handleRename}>Rename</Button>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
