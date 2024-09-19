@@ -16,7 +16,7 @@ interface FileItem {
 interface TreeNode {
   name: string
   type: 'file' | 'folder'
-  children?: TreeNode[],
+  children?: TreeNode[]
   fullPath?: string[]
 }
 
@@ -79,7 +79,7 @@ export default function FileExplorer() {
       node = {
         name: first,
         type: rest.length === 0 ? item.type : 'folder',
-        children: rest.length > 0 ? [] : []
+        children: rest.length > 0 ? [] : undefined
       }
       tree.push(node)
     }
@@ -116,7 +116,7 @@ export default function FileExplorer() {
 
   const handleFileClick = (fileName: string) => {
     const filePath = [...currentPath, fileName].join('/')
-    location.href = "https://media.nextgensell.com/files/"+filePath;
+    location.href = "https://media.nextgensell.com/files/"+filePath
     console.log('File clicked:', filePath)
   }
 
@@ -124,146 +124,124 @@ export default function FileExplorer() {
     setCurrentPath(currentPath.slice(0, -1))
   }
 
-  const sortedNodes = [...currentNodes].sort((a, b) => {
-    if (a.type === 'folder' && b.type === 'file') return -1
-    if (a.type === 'file' && b.type === 'folder') return 1
-    return a.name.localeCompare(b.name)
-  })
-
   const toggleView = () => {
     setIsGridView(!isGridView)
   }
 
   const handleUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const files = event.target.files;
+    const files = event.target.files
     if (files) {
       for (let i = 0; i < files.length; i++) {
-        const file = files[i];
-        console.log('Uploading file:', file.name);
-        const formData = new FormData();
-        formData.append('file', file);
-        formData.append('folder', currentPath.join('/')); // Upload to the current directory
-  
+        const file = files[i]
+        console.log('Uploading file:', file.name)
+        const formData = new FormData()
+        formData.append('file', file)
+        formData.append('folder', currentPath.join('/'))
+
         try {
           const response = await fetch('https://media.nextgensell.com/files/upload', {
             method: 'POST',
             body: formData
-          });
-  
-          const result = await response.json();
-  
+          })
+
+          const result = await response.json()
+
           if (response.ok) {
-            console.log(`File uploaded successfully: ${result.file_path}`);
+            console.log(`File uploaded successfully: ${result.file_path}`)
             if (result.access_url) {
-              console.log('File is publicly accessible at:', result.access_url);
+              console.log('File is publicly accessible at:', result.access_url)
             }
           } else {
-            console.error('Upload failed:', result.message);
+            console.error('Upload failed:', result.message)
           }
         } catch (error) {
-          console.error('An error occurred:', error);
+          console.error('An error occurred:', error)
         }
       }
-      // Refresh the file list after all uploads are complete
-      fetchFiles();
+      fetchFiles()
     }
   }
 
   const handleCreateFolder = () => {
     if (newFolderName) {
-      const folderPath = currentPath.join('/') 
-      console.log('Creating folder:', newFolderName, 'in path:', folderPath);
-  
-      // Clear input and close dialog
-      setNewFolderName('');
-      setIsCreateFolderDialogOpen(false);
-  
-      // Send a request to create the folder on the server
+      const folderPath = currentPath.join('/')
+      console.log('Creating folder:', newFolderName, 'in path:', folderPath)
+
+      setNewFolderName('')
+      setIsCreateFolderDialogOpen(false)
+
       fetch('https://media.nextgensell.com/folders', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          folder: folderPath ? `${folderPath}/${newFolderName}`:newFolderName
+          folder: folderPath ? `${folderPath}/${newFolderName}` : newFolderName
         }),
       })
         .then(response => {
           if (!response.ok) {
-            throw new Error('Failed to create folder');
+            throw new Error('Failed to create folder')
           }
-          return response.json();
+          return response.json()
         })
         .then(data => {
-          console.log('Folder created successfully:', data);
-          // Refresh the file list after folder creation
-          fetchFiles();
+          console.log('Folder created successfully:', data)
+          fetchFiles()
         })
         .catch(error => {
-          console.error('Error creating folder:', error);
-        });
+          console.error('Error creating folder:', error)
+        })
     }
-  };
-
- const handleRename = () => {
-  if (itemToRename && newName) {
-    const folderPath = currentPath.join('/');
-    const currentItemPath = folderPath ? `${folderPath}/${itemToRename.name}` : itemToRename.name;
-    const newItemPath = folderPath ? `${folderPath}/${newName}` : newName;
-
-    console.log('Renaming', currentItemPath, 'to', newItemPath);
-
-    // Clear input and close dialog
-    setNewName('');
-    setIsRenameDialogOpen(false);
-    setItemToRename(null);
-
-    // Send a request to rename the file or folder on the server
-    fetch('http:localhost:5000/file/rename', {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        oldName: currentItemPath,
-        newName: newItemPath,
-      }),
-    })
-      .then(response => {
-        if (!response.ok) {
-          throw new Error('Failed to rename item');
-        }
-        return response.json();
-      })
-      .then(data => {
-        console.log('Item renamed successfully:', data);
-        // Refresh the file list after renaming
-        fetchFiles();
-      })
-      .catch(error => {
-        console.error('Error renaming item:', error);
-      });
   }
-};
 
+  const handleRename = () => {
+    if (itemToRename && newName) {
+      const folderPath = currentPath.join('/')
+      const currentItemPath = folderPath ? `${folderPath}/${itemToRename.name}` : itemToRename.name
+      const newItemPath = folderPath ? `${folderPath}/${newName}` : newName
 
-  const handleMove = (item: TreeNode) => {
-    console.log('Moving', item.name, 'to a new location')
-    // Here you would typically open a dialog to select the new location
-    // and then send a request to your server to move the item
-    // After moving, you might want to refresh the file list
-    // fetchFiles()
+      console.log('Renaming', currentItemPath, 'to', newItemPath)
+
+      setNewName('')
+      setIsRenameDialogOpen(false)
+      setItemToRename(null)
+
+      fetch('http://localhost:5000/file/rename', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          oldName: currentItemPath,
+          newName: newItemPath,
+        }),
+      })
+        .then(response => {
+          if (!response.ok) {
+            throw new Error('Failed to rename item')
+          }
+          return response.json()
+        })
+        .then(data => {
+          console.log('Item renamed successfully:', data)
+          fetchFiles()
+        })
+        .catch(error => {
+          console.error('Error renaming item:', error)
+        })
+    }
   }
 
   const handleDelete = (item: TreeNode) => {
-    const confirmDelete = window.confirm(`Are you sure you want to delete ${item.type === 'folder' ? 'this folder and all its contents?' : 'this file?'}`);
-    const folderPath = currentPath.join('/');
-    let toDel = folderPath ? `${folderPath}/${item.name}` : item.name;
+    const confirmDelete = window.confirm(`Are you sure you want to delete ${item.type === 'folder' ? 'this folder and all its contents?' : 'this file?'}`)
+    const folderPath = currentPath.join('/')
+    let toDel = folderPath ? `${folderPath}/${item.name}` : item.name
     if (confirmDelete) {
       const url = item.type === 'folder'
         ? 'https://media.nextgensell.com/folders'
-        : `https://media.nextgensell.com/files/${encodeURIComponent(toDel)}`;
-  
+        : `https://media.nextgensell.com/files/${encodeURIComponent(toDel)}`
+
       fetch(url, {
         method: 'DELETE',
         headers: {
@@ -275,10 +253,10 @@ export default function FileExplorer() {
       })
         .then(response => response.json())
         .then(data => {
-          console.log('Deletion successful:', data);
-          fetchFiles();  // Refresh the file list after deletion
+          console.log('Deletion successful:', data)
+          fetchFiles()
         })
-        .catch(error => console.error('Error deleting item:', error));
+        .catch(error => console.error('Error deleting item:', error))
     }
   }
 
@@ -305,6 +283,12 @@ export default function FileExplorer() {
     searchInTree(fileTree)
     setSearchResults(results)
   }
+
+  const sortedNodes = [...currentNodes].sort((a, b) => {
+    if (a.type === 'folder' && b.type === 'file') return -1
+    if (a.type === 'file' && b.type === 'folder') return 1
+    return a.name.localeCompare(b.name)
+  })
 
   return (
     <div className="flex h-screen w-full">
@@ -415,7 +399,7 @@ export default function FileExplorer() {
                         <div className={isGridView ? "mt-4 text-center" : "flex-grow"}>
                           <h3 className="text-sm font-medium text-gray-900 dark:text-gray-50 truncate">{item.name}</h3>
                           {isGridView && <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">{item.type}</p>}
-                          <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">{(item as any).fullPath?.join('/')}</p>
+                          <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">{item.fullPath?.join('/')}</p>
                         </div>
                       </div>
                     </ContextMenuTrigger>
@@ -427,7 +411,6 @@ export default function FileExplorer() {
                       }}>
                         Rename
                       </ContextMenuItem>
-                     
                       <ContextMenuItem onSelect={() => handleDelete(item)}>
                         Delete
                       </ContextMenuItem>
@@ -473,7 +456,6 @@ export default function FileExplorer() {
                     }}>
                       Rename
                     </ContextMenuItem>
-                   
                     <ContextMenuItem onSelect={() => handleDelete(item)}>
                       Delete
                     </ContextMenuItem>

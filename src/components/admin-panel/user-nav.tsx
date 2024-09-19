@@ -27,10 +27,17 @@ import {
   SignedOut,
   UserButton,SignIn
 } from '@clerk/nextjs'
+import { useUser } from '@clerk/nextjs';
 export function UserNav() {
+  const { isLoaded, user } = useUser();
+
+  if (!isLoaded) {
+    return <div>Loading...</div>;
+  }
+  const role = user?.publicMetadata?.role;
   return (
     
-    <DropdownMenu>
+    <>
 
 <header className="flex justify-between bg-white text-black dark:bg-transparent dark:text-white !important">
 
@@ -40,6 +47,6 @@ export function UserNav() {
       
 
       
-    </DropdownMenu>
+    </>
   );
 }
