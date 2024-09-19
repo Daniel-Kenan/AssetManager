@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Breadcrumb, BreadcrumbList, BreadcrumbItem, BreadcrumbLink, BreadcrumbSeparator } from "@/components/ui/breadcrumb"
 import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from "@/components/ui/context-menu"
-import { FolderIcon, FileIcon, ChevronLeftIcon, ChevronRightIcon, Loader2Icon, LayoutGridIcon, LayoutListIcon, UploadIcon, FolderPlusIcon } from 'lucide-react'
+import { FolderIcon, FileIcon, ChevronLeftIcon, ChevronRightIcon, Loader2Icon, LayoutGridIcon, LayoutListIcon, UploadIcon, FolderPlusIcon, SearchIcon } from 'lucide-react'
 
 interface FileItem {
   name: string
@@ -16,7 +16,8 @@ interface FileItem {
 interface TreeNode {
   name: string
   type: 'file' | 'folder'
-  children?: TreeNode[]
+  children?: TreeNode[],
+  fullPath?: string[]
 }
 
 export default function FileExplorer() {
@@ -31,6 +32,8 @@ export default function FileExplorer() {
   const [itemToRename, setItemToRename] = useState<TreeNode | null>(null)
   const [newName, setNewName] = useState('')
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [searchResults, setSearchResults] = useState<TreeNode[]>([])
 
   useEffect(() => {
     fetchFiles()
@@ -201,19 +204,48 @@ export default function FileExplorer() {
         });
     }
   };
-  
 
-  const handleRename = () => {
-    if (itemToRename && newName) {
-      console.log('Renaming', itemToRename.name, 'to', newName)
-      setNewName('')
-      setIsRenameDialogOpen(false)
-      setItemToRename(null)
-      // Here you would typically send a request to your server to rename the item
-      // After renaming, you might want to refresh the file list
-      // fetchFiles()
-    }
+ const handleRename = () => {
+  if (itemToRename && newName) {
+    const folderPath = currentPath.join('/');
+    const currentItemPath = folderPath ? `${folderPath}/${itemToRename.name}` : itemToRename.name;
+    const newItemPath = folderPath ? `${folderPath}/${newName}` : newName;
+
+    console.log('Renaming', currentItemPath, 'to', newItemPath);
+
+    // Clear input and close dialog
+    setNewName('');
+    setIsRenameDialogOpen(false);
+    setItemToRename(null);
+
+    // Send a request to rename the file or folder on the server
+    fetch('http:localhost:5000/file/rename', {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        oldName: currentItemPath,
+        newName: newItemPath,
+      }),
+    })
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Failed to rename item');
+        }
+        return response.json();
+      })
+      .then(data => {
+        console.log('Item renamed successfully:', data);
+        // Refresh the file list after renaming
+        fetchFiles();
+      })
+      .catch(error => {
+        console.error('Error renaming item:', error);
+      });
   }
+};
+
 
   const handleMove = (item: TreeNode) => {
     console.log('Moving', item.name, 'to a new location')
@@ -249,7 +281,30 @@ export default function FileExplorer() {
         .catch(error => console.error('Error deleting item:', error));
     }
   }
-  
+
+  const searchAttachment = (query: string) => {
+    setSearchQuery(query)
+    if (query.trim() === '') {
+      setSearchResults([])
+      return
+    }
+
+    const results: TreeNode[] = []
+    const searchInTree = (nodes: TreeNode[], path: string[] = []) => {
+      nodes.forEach(node => {
+        const fullPath = [...path, node.name]
+        if (node.name.toLowerCase().includes(query.toLowerCase())) {
+          results.push({ ...node, fullPath })
+        }
+        if (node.children) {
+          searchInTree(node.children, fullPath)
+        }
+      })
+    }
+
+    searchInTree(fileTree)
+    setSearchResults(results)
+  }
 
   return (
     <div className="flex h-screen w-full">
@@ -314,6 +369,16 @@ export default function FileExplorer() {
                 <Button onClick={handleCreateFolder}>Create</Button>
               </DialogContent>
             </Dialog>
+            <div className="relative">
+              <Input
+                type="search"
+                placeholder="Search files..."
+                value={searchQuery}
+                onChange={(e) => searchAttachment(e.target.value)}
+                className="pl-8"
+              />
+              <SearchIcon className="absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+            </div>
           </div>
         </div>
 
@@ -323,6 +388,54 @@ export default function FileExplorer() {
               <Loader2Icon className="h-8 w-8 animate-spin text-primary" />
               <span className="sr-only">Loading...</span>
             </div>
+          ) : searchQuery ? (
+            searchResults.length === 0 ? (
+              <div className="text-center text-gray-500 dark:text-gray-400">No results found.</div>
+            ) : (
+              <div className={isGridView ? 
+                "grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5" : 
+                "flex flex-col space-y-2"
+              }>
+                {searchResults.map((item, index) => (
+                  <ContextMenu key={index}>
+                    <ContextMenuTrigger>
+                      <div 
+                        className={`group relative rounded-md border border-gray-200 bg-white p-4 shadow-sm transition-all hover:border-gray-300 dark:border-gray-800 dark:bg-gray-950 dark:hover:border-gray-700 cursor-pointer ${
+                          isGridView ? '' : 'flex items-center space-x-4'
+                        }`}
+                        onClick={() => item.type === 'folder' ? handleFolderClick(item.name) : handleFileClick(item.name)}
+                      >
+                        <div className={`flex ${isGridView ? 'h-20 w-full' : 'h-10 w-10'} items-center justify-center`}>
+                          {item.type === 'folder' ? (
+                            <FolderIcon className={`${isGridView ? 'h-12 w-12' : 'h-6 w-6'} text-gray-500 group-hover:text-gray-700 dark:text-gray-400 dark:group-hover:text-gray-300`} />
+                          ) : (
+                            <FileIcon className={`${isGridView ? 'h-12 w-12' : 'h-6 w-6'} text-gray-500 group-hover:text-gray-700 dark:text-gray-400 dark:group-hover:text-gray-300`} />
+                          )}
+                        </div>
+                        <div className={isGridView ? "mt-4 text-center" : "flex-grow"}>
+                          <h3 className="text-sm font-medium text-gray-900 dark:text-gray-50 truncate">{item.name}</h3>
+                          {isGridView && <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">{item.type}</p>}
+                          <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">{(item as any).fullPath?.join('/')}</p>
+                        </div>
+                      </div>
+                    </ContextMenuTrigger>
+                    <ContextMenuContent>
+                      <ContextMenuItem onSelect={() => {
+                        setItemToRename(item)
+                        setNewName(item.name)
+                        setIsRenameDialogOpen(true)
+                      }}>
+                        Rename
+                      </ContextMenuItem>
+                     
+                      <ContextMenuItem onSelect={() => handleDelete(item)}>
+                        Delete
+                      </ContextMenuItem>
+                    </ContextMenuContent>
+                  </ContextMenu>
+                ))}
+              </div>
+            )
           ) : sortedNodes.length === 0 ? (
             <div className="text-center text-gray-500 dark:text-gray-400">This folder is empty.</div>
           ) : (
@@ -360,9 +473,7 @@ export default function FileExplorer() {
                     }}>
                       Rename
                     </ContextMenuItem>
-                    <ContextMenuItem onSelect={() => handleMove(item)}>
-                      Move
-                    </ContextMenuItem>
+                   
                     <ContextMenuItem onSelect={() => handleDelete(item)}>
                       Delete
                     </ContextMenuItem>

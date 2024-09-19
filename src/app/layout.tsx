@@ -1,5 +1,12 @@
 import type { Metadata } from "next";
 import { GeistSans } from "geist/font/sans";
+import {
+  ClerkProvider,
+  SignInButton,
+  SignedIn,
+  SignedOut,
+  UserButton,SignIn
+} from '@clerk/nextjs'
 
 import "./globals.css";
 
@@ -40,12 +47,17 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
+    
     <html lang="en" suppressHydrationWarning>
       <body className={GeistSans.className}>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-          {children}
+        <ClerkProvider>
+        {children}
+        </ClerkProvider>
+      
         </ThemeProvider>
       </body>
     </html>
+   
   );
 }
