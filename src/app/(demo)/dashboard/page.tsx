@@ -1,3 +1,4 @@
+"use client"
 import Link from "next/link";
 import { useEffect } from "react";
 import PlaceholderContent from "@/components/charts-01-chunk-0";
@@ -32,6 +33,7 @@ export default function DashboardPage() {
         console.error("Error fetching user data:", error);
       });
   }, []); 
+
   return (
     <ContentLayout title="Dashboard">
          <h1 className="text-xl font-bold">Welcome back <span className="text-2xl font-bold">🌟</span>, it&apos;s time to get productive</h1>
