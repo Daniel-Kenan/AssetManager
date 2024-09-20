@@ -118,6 +118,7 @@ export function getMenuList(pathname: string): Group[] {
       ]
     }
     ,
+    
     {
       groupLabel: "Settings",
       menus: [
@@ -127,8 +128,7 @@ export function getMenuList(pathname: string): Group[] {
           active: pathname.includes("/users"),
           icon: Users,
           submenus: []
-        },
-        
+        }
       ]
     }
   ];
