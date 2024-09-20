@@ -6,7 +6,7 @@ import { ContentLayout } from "@/components/admin-panel/content-layout";
 
 export default function PersonalNotes() {
   return (
-    <ContentLayout title="Personal Sticky Notes">
+    <ContentLayout title="Sales Funnel Board">
       
       <KanbanBoard/>
     </ContentLayout>

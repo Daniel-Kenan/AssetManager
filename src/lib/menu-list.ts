@@ -55,7 +55,7 @@ export function getMenuList(pathname: string): Group[] {
         },
         {
           href: "/kanban",
-          label: "Kanban",
+          label: "Sales Funnel",
           active: pathname.includes("/kanban"),
           icon: SquareKanban,
           submenus: []
