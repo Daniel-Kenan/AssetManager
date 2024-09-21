@@ -48,7 +48,7 @@ export default function ImprovedStaffChatComponent() {
       setConversations((prevConversations) => {
         const updatedConversations = { ...prevConversations };
         const conversationId = message.senderId != user.id ? message.recipientId : message.senderId;
-      
+        
         const conversation = updatedConversations[conversationId] || { memberId: conversationId, messages: [], unreadCount: 0 };
         
         if (!conversation.messages.some(msg => msg.id === message.id)) {
@@ -76,32 +76,44 @@ export default function ImprovedStaffChatComponent() {
         recipientId: selectedMember,
         content: inputMessage,
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-      }
+      };
 
-      setInputMessage('')
+      // Add message locally to the conversation
+      setConversations((prevConversations) => {
+        const updatedConversations = { ...prevConversations };
+        const conversationId = selectedMember;
+
+        const conversation = updatedConversations[conversationId] || { memberId: conversationId, messages: [], unreadCount: 0 };
+        conversation.messages.push(newMessage);
+        updatedConversations[conversationId] = conversation;
+
+        return updatedConversations;
+      });
+
+      setInputMessage('');
 
       try {
-        const result = await sendMessage(newMessage)
+        const result = await sendMessage(newMessage);
         if (result.success) {
           console.log("Message sent successfully");
         } else {
           console.error("Failed to send message:", result.error);
         }
       } catch (error) {
-        console.error("Error sending message:", error)
+        console.error("Error sending message:", error);
       }
     }
   }
 
   const handleSelectMember = (memberId: string) => {
-    setSelectedMember(memberId)
+    setSelectedMember(memberId);
     setConversations((prevConversations) => {
-      const updatedConversations = { ...prevConversations }
+      const updatedConversations = { ...prevConversations };
       if (updatedConversations[memberId]) {
-        updatedConversations[memberId].unreadCount = 0
+        updatedConversations[memberId].unreadCount = 0;
       }
-      return updatedConversations
-    })
+      return updatedConversations;
+    });
   }
 
   if (!isLoaded || !user) {
@@ -121,9 +133,7 @@ export default function ImprovedStaffChatComponent() {
               {memberships?.data?.map((mem) => (
                 <div
                   key={mem.id}
-                  className={`flex items-center space-x-4 p-4 cursor-pointer transition-colors duration-200 ${
-                    selectedMember === mem.id ? 'bg-secondary' : 'hover:bg-secondary/50'
-                  }`}
+                  className={`flex items-center space-x-4 p-4 cursor-pointer transition-colors duration-200 ${selectedMember === mem.id ? 'bg-secondary' : 'hover:bg-secondary/50'}`}
                   onClick={() => handleSelectMember(mem.id)}
                 >
                   <Avatar className="relative">
@@ -186,15 +196,13 @@ export default function ImprovedStaffChatComponent() {
                 {/* Messages */}
                 <ScrollArea className="flex-1 p-4" ref={chatScrollAreaRef}>
                   {conversations[selectedMember]?.messages.map((message, index) => {
-                    const isCurrentUser = message.senderId === user?.id
-                    const showAvatar = index === 0 || conversations[selectedMember].messages[index - 1].senderId !== message.senderId
+                    const isCurrentUser = message.senderId === user?.id;
+                    const showAvatar = index === 0 || conversations[selectedMember].messages[index - 1].senderId !== message.senderId;
 
                     return (
                       <div
                         key={message.id}
-                        className={`flex items-end space-x-2 mb-4 ${
-                          isCurrentUser ? 'justify-end' : 'justify-start'
-                        }`}
+                        className={`flex items-end space-x-2 mb-4 ${isCurrentUser ? 'justify-end' : 'justify-start'}`}
                       >
                         {!isCurrentUser && showAvatar && (
                           <Avatar className="w-6 h-6">
@@ -204,11 +212,7 @@ export default function ImprovedStaffChatComponent() {
                           </Avatar>
                         )}
                         <div
-                          className={`max-w-[70%] p-3 rounded-lg ${
-                            isCurrentUser
-                              ? 'bg-primary text-primary-foreground'
-                              : 'bg-secondary'
-                          }`}
+                          className={`max-w-[70%] p-3 rounded-lg ${isCurrentUser ? 'bg-primary text-primary-foreground' : 'bg-secondary'}`}
                         >
                           <p>{message.content}</p>
                           <p className="text-xs text-muted-foreground mt-1">{message.timestamp}</p>
@@ -220,46 +224,32 @@ export default function ImprovedStaffChatComponent() {
                           </Avatar>
                         )}
                       </div>
-                    )
+                    );
                   })}
                   <div ref={messagesEndRef} />
                 </ScrollArea>
 
                 {/* Message Input */}
-                <div className="border-t p-4">
-                  <div className="flex items-center space-x-2 bg-secondary rounded-lg p-2">
-                    <Button variant="ghost" size="icon" className="text-muted-foreground">
-                      <Paperclip className="h-5 w-5" />
-                      <span className="sr-only">Attach file</span>
-                    </Button>
-                    <Input
-                      placeholder="Type a message..."
-                      value={inputMessage}
-                      onChange={(e) => setInputMessage(e.target.value)}
-                      onKeyPress={(e) => {
-                        if (e.key === 'Enter') {
-                          handleSendMessage()
-                        }
-                      }}
-                      className="flex-1 border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
-                    />
-                    <Button variant="ghost" size="icon" className="text-muted-foreground">
-                      <Smile className="h-5 w-5" />
-                      <span className="sr-only">Add emoji</span>
-                    </Button>
-                    <Button onClick={handleSendMessage} size="icon">
-                      <Send className="h-4 w-4" />
-                      <span className="sr-only">Send</span>
-                    </Button>
-                  </div>
+                <div className="flex items-center p-4 border-t">
+                  <Input
+                    value={inputMessage}
+                    onChange={(e) => setInputMessage(e.target.value)}
+                    placeholder="Type your message..."
+                    className="flex-1"
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        handleSendMessage();
+                      }
+                    }}
+                  />
+                  <Button onClick={handleSendMessage} className="ml-2">
+                    <Send className="h-4 w-4" />
+                  </Button>
                 </div>
               </>
             ) : (
               <div className="flex items-center justify-center h-full">
-                <div className="text-center">
-                  <h2 className="text-lg font-semibold">Select a member to start chatting</h2>
-                  <p className="text-muted-foreground">Choose a member from the list to view and send messages.</p>
-                </div>
+                <p>Select a member to start chatting!</p>
               </div>
             )}
           </div>
