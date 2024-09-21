@@ -7,7 +7,8 @@ import {
   LayoutGrid,
   LucideIcon,SquareParking,
   SquareKanban,Inbox,FolderClosed,
-  Building2 
+  Building2 ,
+  ListTodo 
 } from "lucide-react";
 
 type Submenu = {
@@ -60,6 +61,13 @@ export function getMenuList(pathname: string): Group[] {
           icon: SquareKanban,
           submenus: []
         },
+        // {
+        //   href: "/personalnotes",
+        //   label: "My Tasks",
+        //   active: pathname.includes("/personalnotes"),
+        //   icon: ListTodo ,
+        //   submenus: []
+        // },
         {
           href: "/personalnotes",
           label: "Personal Notes",

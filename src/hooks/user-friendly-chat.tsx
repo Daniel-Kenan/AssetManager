@@ -1,236 +1,270 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { OrgMembersParams } from "@/utils/organizations"
+import { useState, useRef, useEffect } from 'react'
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
+import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { UserPlus, Send, Users, Search, MessageSquare } from 'lucide-react'
+import { Send, Phone, Video, MoreVertical, Paperclip, Smile } from "lucide-react"
+import { useOrganization, useUser } from "@clerk/nextjs"
+import { pusherClient } from "@/lib/pusher"
+import { sendMessage, Message } from "@/actions/message.action"
+import { Badge } from "@/components/ui/badge"
 
-// Mock user data - replace with your actual user data
-const users = [
-  { id: 1, name: 'Alice Johnson', avatar: '/placeholder.svg?height=40&width=40', status: 'online' },
-  { id: 2, name: 'Bob Smith', avatar: '/placeholder.svg?height=40&width=40', status: 'offline' },
-  { id: 3, name: 'Charlie Brown', avatar: '/placeholder.svg?height=40&width=40', status: 'away' },
-  { id: 4, name: 'Diana Prince', avatar: '/placeholder.svg?height=40&width=40', status: 'online' },
-  { id: 5, name: 'Ethan Hunt', avatar: '/placeholder.svg?height=40&width=40', status: 'offline' },
-]
-
-// Mock message data - replace with your actual message data or API calls
-const initialMessages = [
-  { id: 1, senderId: 1, text: 'Hey there!', timestamp: '2023-04-01T12:00:00Z' },
-  { id: 2, senderId: 0, text: 'Hi Alice, how are you?', timestamp: '2023-04-01T12:01:00Z' },
-  { id: 3, senderId: 1, text: 'Im doing great, thanks for asking!', timestamp: '2023-04-01T12:02:00Z' },
-  { id: 4, senderId: 0, text: 'Thats wonderful to hear. Any plans for the weekend?', timestamp: '2023-04-02T10:00:00Z' },
-  { id: 5, senderId: 1, text: 'Im thinking of going hiking. How about you?', timestamp: '2023-04-02T10:05:00Z' },
-]
-
-const formatDate = (date: string) => {
-  const today = new Date()
-  const messageDate = new Date(date)
-  
-  if (messageDate.toDateString() === today.toDateString()) {
-    return 'Today'
-  } else if (messageDate.toDateString() === new Date(today.setDate(today.getDate() - 1)).toDateString()) {
-    return 'Yesterday'
-  } else {
-    return messageDate.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
-  }
+type Conversation = {
+  memberId: string
+  messages: Message[]
+  unreadCount: number
 }
 
-export default function Component() {
-  const [selectedUser, setSelectedUser] = useState<typeof users[0] | null>(null)
-  const [messages, setMessages] = useState(initialMessages)
-  const [newMessage, setNewMessage] = useState('')
-  const [showUserList, setShowUserList] = useState(false)
-  const [searchTerm, setSearchTerm] = useState('')
-  const [isTyping, setIsTyping] = useState(false)
+export default function ImprovedStaffChatComponent() {
+  const [conversations, setConversations] = useState<{ [key: string]: Conversation }>({})
+  const [inputMessage, setInputMessage] = useState('')
+  const [selectedMember, setSelectedMember] = useState<string | null>(null)
+  const [onlineMembers, setOnlineMembers] = useState<Set<string>>(new Set())
   const messagesEndRef = useRef<HTMLDivElement>(null)
+  const chatScrollAreaRef = useRef<HTMLDivElement>(null)
 
-  const filteredUsers = users.filter(user => 
-    user.name.toLowerCase().includes(searchTerm.toLowerCase())
-  )
+  const { user } = useUser()
+  const { isLoaded, memberships } = useOrganization(OrgMembersParams)
 
-  const handleSendMessage = () => {
-    if (newMessage.trim() && selectedUser) {
-      const newMsg = {
-        id: messages.length + 1,
-        senderId: 0, // Assuming 0 is the current user's ID
-        text: newMessage,
-        timestamp: new Date().toISOString(),
-      }
-      setMessages([...messages, newMsg])
-      setNewMessage('')
-      // Simulate received message
-      setTimeout(() => {
-        setIsTyping(true)
-        setTimeout(() => {
-          setIsTyping(false)
-          setMessages(prev => [...prev, {
-            id: prev.length + 1,
-            senderId: selectedUser.id,
-            text: "Thanks for your message! I'll get back to you soon.",
-            timestamp: new Date().toISOString(),
-          }])
-        }, 2000)
-      }, 1000)
+  const scrollToBottom = () => {
+    if (chatScrollAreaRef.current) {
+      chatScrollAreaRef.current.scrollTop = chatScrollAreaRef.current.scrollHeight
     }
   }
 
-  useEffect(() => {
-    const handleEsc = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') setShowUserList(false)
-    }
-    window.addEventListener('keydown', handleEsc)
-    return () => {
-      window.removeEventListener('keydown', handleEsc)
-    }
-  }, [])
+  useEffect(scrollToBottom, [selectedMember, conversations])
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [messages])
+    if (!user) return;
+
+    const channel = pusherClient.subscribe('chat');
+
+    channel.bind("new-message", (message: Message) => {
+      console.log("Incoming message:", message); 
+      setConversations((prevConversations) => {
+        const updatedConversations = { ...prevConversations };
+        const conversationId = message.senderId != user.id ? message.recipientId : message.senderId;
+      
+        const conversation = updatedConversations[conversationId] || { memberId: conversationId, messages: [], unreadCount: 0 };
+        
+        if (!conversation.messages.some(msg => msg.id === message.id)) {
+          conversation.messages.push(message);
+          if (conversationId !== selectedMember) {
+            conversation.unreadCount++;
+          }
+        }
+        
+        updatedConversations[conversationId] = conversation;
+        return updatedConversations;
+      });
+    });
+
+    return () => {
+      pusherClient.unsubscribe('chat');
+    }
+  }, [user, selectedMember])
+
+  const handleSendMessage = async () => {
+    if (inputMessage.trim() !== '' && user && selectedMember) {
+      const newMessage: Message = {
+        id: Date.now(),
+        senderId: user.id,
+        recipientId: selectedMember,
+        content: inputMessage,
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      }
+
+      setInputMessage('')
+
+      try {
+        const result = await sendMessage(newMessage)
+        if (result.success) {
+          console.log("Message sent successfully");
+        } else {
+          console.error("Failed to send message:", result.error);
+        }
+      } catch (error) {
+        console.error("Error sending message:", error)
+      }
+    }
+  }
+
+  const handleSelectMember = (memberId: string) => {
+    setSelectedMember(memberId)
+    setConversations((prevConversations) => {
+      const updatedConversations = { ...prevConversations }
+      if (updatedConversations[memberId]) {
+        updatedConversations[memberId].unreadCount = 0
+      }
+      return updatedConversations
+    })
+  }
+
+  if (!isLoaded || !user) {
+    return <div>Loading...</div>
+  }
 
   return (
-    <div className="flex h-screen bg-gray-100 w-full">
-      <div className="flex-1 flex flex-col w-full max-w-8xl mx-auto bg-white shadow-xl">
-        <div className="flex-1 flex">
-          {/* User list panel */}
-          <div className={`w-80 border-r ${showUserList ? 'block' : 'hidden'} md:block`}>
+    <Card className="w-full mx-auto">
+      <CardContent className="p-0">
+        <div className="grid grid-cols-[300px_1fr] h-[700px]">
+          {/* Member List */}
+          <div className="bg-secondary/30">
             <div className="p-4">
-              <Input
-                type="text"
-                placeholder="Search users..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="mb-4"
-              />
-              <ScrollArea className="h-[calc(100vh-8rem)]">
-                {filteredUsers.map((user) => (
-                  <button
-                    key={user.id}
-                    className={`flex items-center w-full p-3 rounded-lg transition-colors ${
-                      selectedUser?.id === user.id ? 'bg-blue-100' : 'hover:bg-gray-100'
-                    }`}
-                    onClick={() => {
-                      setSelectedUser(user)
-                      setShowUserList(false)
-                    }}
-                  >
-                    <Avatar className="h-10 w-10 mr-3">
-                      <AvatarImage src={user.avatar} alt={user.name} />
-                      <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
-                    </Avatar>
-                    <div className="flex flex-col items-start">
-                      <span className="text-sm font-medium">{user.name}</span>
-                      <span className={`text-xs ${
-                        user.status === 'online' ? 'text-green-500' :
-                        user.status === 'away' ? 'text-yellow-500' : 'text-gray-500'
-                      }`}>
-                        {user.status}
-                      </span>
-                    </div>
-                  </button>
-                ))}
-              </ScrollArea>
+              <Input placeholder="Search members..." className="mb-4" />
             </div>
+            <ScrollArea className="h-[calc(100%-5rem)]">
+              {memberships?.data?.map((mem) => (
+                <div
+                  key={mem.id}
+                  className={`flex items-center space-x-4 p-4 cursor-pointer transition-colors duration-200 ${
+                    selectedMember === mem.id ? 'bg-secondary' : 'hover:bg-secondary/50'
+                  }`}
+                  onClick={() => handleSelectMember(mem.id)}
+                >
+                  <Avatar className="relative">
+                    <AvatarImage src={mem.publicUserData?.imageUrl || '/placeholder.svg?height=40&width=40'} alt={mem.publicUserData?.identifier || 'Unknown'} />
+                    <AvatarFallback>{(mem.publicUserData?.firstName?.[0] || 'U') + (mem.publicUserData?.lastName?.[0] || '')}</AvatarFallback>
+                    {onlineMembers.has(mem.id) && (
+                      <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></span>
+                    )}
+                  </Avatar>
+                  <div className="flex-1 overflow-hidden">
+                    <p className="font-medium">{mem.publicUserData?.identifier}</p>
+                    <p className="text-sm text-muted-foreground truncate">
+                      {mem.role} {mem.publicUserData?.userId === user?.id && "(You)"}
+                    </p>
+                  </div>
+                  {conversations[mem.id]?.unreadCount > 0 && (
+                    <Badge variant="destructive">{conversations[mem.id].unreadCount}</Badge>
+                  )}
+                </div>
+              ))}
+            </ScrollArea>
           </div>
 
-          {/* Chat interface */}
-          <div className="flex-1 flex flex-col">
-            {selectedUser ? (
+          {/* Chat Window */}
+          <div className="flex flex-col bg-background">
+            {selectedMember ? (
               <>
-                <div className="border-b p-4 flex items-center justify-between">
-                  <div className="flex items-center">
-                    <Avatar className="h-10 w-10 mr-3">
-                      <AvatarImage src={selectedUser.avatar} alt={selectedUser.name} />
-                      <AvatarFallback>{selectedUser.name.charAt(0)}</AvatarFallback>
+                {/* Chat Header */}
+                <div className="flex items-center justify-between p-4 border-b">
+                  <div className="flex items-center space-x-4">
+                    <Avatar>
+                      <AvatarImage src={memberships?.data?.find(mem => mem.id === selectedMember)?.publicUserData.imageUrl || '/placeholder.svg?height=40&width=40'} 
+                                   alt={memberships?.data?.find(mem => mem.id === selectedMember)?.publicUserData.identifier || 'Unknown'} />
+                      <AvatarFallback>{memberships?.data?.find(mem => mem.id === selectedMember)?.publicUserData.firstName?.[0] || 'U'}</AvatarFallback>
                     </Avatar>
-                    <div className="flex flex-col">
-                      <span className="font-semibold">{selectedUser.name}</span>
-                      <span className={`text-xs ${
-                        selectedUser.status === 'online' ? 'text-green-500' :
-                        selectedUser.status === 'away' ? 'text-yellow-500' : 'text-gray-500'
-                      }`}>
-                        {selectedUser.status}
-                      </span>
+                    <div>
+                      <h2 className="font-semibold">{memberships?.data?.find(mem => mem.id === selectedMember)?.publicUserData.identifier}</h2>
+                      <p className="text-sm text-muted-foreground">
+                        {memberships?.data?.find(mem => mem.id === selectedMember)?.role}
+                        {onlineMembers.has(selectedMember) && " • Online"}
+                      </p>
                     </div>
                   </div>
-                  <div className="flex items-center">
-                    <Button variant="ghost" size="icon" className="md:hidden mr-2" onClick={() => setShowUserList(!showUserList)}>
-                      <Users className="h-5 w-5" />
+                  <div className="flex space-x-2">
+                    <Button variant="ghost" size="icon">
+                      <Phone className="h-4 w-4" />
+                      <span className="sr-only">Call</span>
                     </Button>
                     <Button variant="ghost" size="icon">
-                      <UserPlus className="h-5 w-5" />
+                      <Video className="h-4 w-4" />
+                      <span className="sr-only">Video call</span>
+                    </Button>
+                    <Button variant="ghost" size="icon">
+                      <MoreVertical className="h-4 w-4" />
+                      <span className="sr-only">More options</span>
                     </Button>
                   </div>
                 </div>
-                <ScrollArea className="flex-1 p-4">
-                  {messages.reduce((acc: JSX.Element[], message, index, array) => {
-                    if (index === 0 || formatDate(message.timestamp) !== formatDate(array[index - 1].timestamp)) {
-                      acc.push(
-                        <div key={`date-${message.id}`} className="text-center my-4">
-                          <span className="bg-gray-200 text-gray-600 text-xs font-semibold px-2 py-1 rounded-full">
-                            {formatDate(message.timestamp)}
-                          </span>
-                        </div>
-                      )
-                    }
-                    acc.push(
+
+                {/* Messages */}
+                <ScrollArea className="flex-1 p-4" ref={chatScrollAreaRef}>
+                  {conversations[selectedMember]?.messages.map((message, index) => {
+                    const isCurrentUser = message.senderId === user?.id
+                    const showAvatar = index === 0 || conversations[selectedMember].messages[index - 1].senderId !== message.senderId
+
+                    return (
                       <div
                         key={message.id}
-                        className={`mb-4 ${message.senderId === 0 ? 'text-right' : 'text-left'}`}
+                        className={`flex items-end space-x-2 mb-4 ${
+                          isCurrentUser ? 'justify-end' : 'justify-start'
+                        }`}
                       >
+                        {!isCurrentUser && showAvatar && (
+                          <Avatar className="w-6 h-6">
+                            <AvatarImage src={memberships?.data?.find(mem => mem.id === message.senderId)?.publicUserData.imageUrl || '/placeholder.svg?height=24&width=24'} 
+                                         alt={memberships?.data?.find(mem => mem.id === message.senderId)?.publicUserData.identifier || 'Unknown'} />
+                            <AvatarFallback>{memberships?.data?.find(mem => mem.id === message.senderId)?.publicUserData.firstName?.[0] || 'U'}</AvatarFallback>
+                          </Avatar>
+                        )}
                         <div
-                          className={`inline-block p-3 rounded-lg ${
-                            message.senderId === 0 ? 'bg-blue-500 text-white' : 'bg-gray-200'
+                          className={`max-w-[70%] p-3 rounded-lg ${
+                            isCurrentUser
+                              ? 'bg-primary text-primary-foreground'
+                              : 'bg-secondary'
                           }`}
                         >
-                          {message.text}
+                          <p>{message.content}</p>
+                          <p className="text-xs text-muted-foreground mt-1">{message.timestamp}</p>
                         </div>
-                        <div className="text-xs text-gray-500 mt-1">
-                          {new Date(message.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
-                        </div>
+                        {isCurrentUser && showAvatar && (
+                          <Avatar className="w-6 h-6">
+                            <AvatarImage src={user?.imageUrl || '/placeholder.svg?height=24&width=24'} alt={user?.username || 'You'} />
+                            <AvatarFallback>{user?.firstName?.[0] || 'Y'}</AvatarFallback>
+                          </Avatar>
+                        )}
                       </div>
                     )
-                    return acc
-                  }, [])}
-                  {isTyping && (
-                    <div className="flex items-center text-gray-500 text-sm">
-                      <div className="typing-indicator"></div>
-                      <span className="ml-2">{selectedUser.name} is typing...</span>
-                    </div>
-                  )}
+                  })}
                   <div ref={messagesEndRef} />
                 </ScrollArea>
-                <div className="border-t p-4 flex items-center">
-                  <Input
-                    type="text"
-                    placeholder="Type a message..."
-                    value={newMessage}
-                    onChange={(e) => setNewMessage(e.target.value)}
-                    className="flex-1 mr-2"
-                    onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
-                  />
-                  <Button onClick={handleSendMessage}>
-                    <Send className="h-5 w-5" />
-                  </Button>
+
+                {/* Message Input */}
+                <div className="border-t p-4">
+                  <div className="flex items-center space-x-2 bg-secondary rounded-lg p-2">
+                    <Button variant="ghost" size="icon" className="text-muted-foreground">
+                      <Paperclip className="h-5 w-5" />
+                      <span className="sr-only">Attach file</span>
+                    </Button>
+                    <Input
+                      placeholder="Type a message..."
+                      value={inputMessage}
+                      onChange={(e) => setInputMessage(e.target.value)}
+                      onKeyPress={(e) => {
+                        if (e.key === 'Enter') {
+                          handleSendMessage()
+                        }
+                      }}
+                      className="flex-1 border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
+                    />
+                    <Button variant="ghost" size="icon" className="text-muted-foreground">
+                      <Smile className="h-5 w-5" />
+                      <span className="sr-only">Add emoji</span>
+                    </Button>
+                    <Button onClick={handleSendMessage} size="icon">
+                      <Send className="h-4 w-4" />
+                      <span className="sr-only">Send</span>
+                    </Button>
+                  </div>
                 </div>
               </>
             ) : (
-              <div className="flex-1 flex items-center justify-center text-gray-500 flex-col p-4">
-                <MessageSquare className="h-16 w-16 mb-4 text-blue-500" />
-                <h2 className="text-2xl font-semibold mb-2">Welcome to Your Chat App</h2>
-                <p className="text-center mb-4">Select a user from the list to start a conversation.</p>
-                <Button variant="outline" className="mt-4" onClick={() => setShowUserList(true)}>
-                  <Users className="h-5 w-5 mr-2" />
-                  Show Users
-                </Button>
+              <div className="flex items-center justify-center h-full">
+                <div className="text-center">
+                  <h2 className="text-lg font-semibold">Select a member to start chatting</h2>
+                  <p className="text-muted-foreground">Choose a member from the list to view and send messages.</p>
+                </div>
               </div>
             )}
           </div>
         </div>
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   )
 }
