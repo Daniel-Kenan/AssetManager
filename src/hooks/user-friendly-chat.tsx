@@ -47,7 +47,7 @@ export default function ImprovedStaffChatComponent() {
       console.log("Incoming message:", message); 
       setConversations((prevConversations) => {
         const updatedConversations = { ...prevConversations };
-        const conversationId = message.senderId != user.id ? message.recipientId : message.senderId;
+        const conversationId = message.senderId === user.id ? message.recipientId : message.senderId;
         
         const conversation = updatedConversations[conversationId] || { memberId: conversationId, messages: [], unreadCount: 0 };
         
@@ -132,14 +132,14 @@ export default function ImprovedStaffChatComponent() {
             <ScrollArea className="h-[calc(100%-5rem)]">
               {memberships?.data?.map((mem) => (
                 <div
-                  key={mem.id}
-                  className={`flex items-center space-x-4 p-4 cursor-pointer transition-colors duration-200 ${selectedMember === mem.id ? 'bg-secondary' : 'hover:bg-secondary/50'}`}
-                  onClick={() => handleSelectMember(mem.id)}
+                  key={mem.publicUserData.userId!}
+                  className={`flex items-center space-x-4 p-4 cursor-pointer transition-colors duration-200 ${selectedMember === mem.publicUserData.userId! ? 'bg-secondary' : 'hover:bg-secondary/50'}`}
+                  onClick={() => handleSelectMember(mem.publicUserData.userId!)}
                 >
                   <Avatar className="relative">
                     <AvatarImage src={mem.publicUserData?.imageUrl || '/placeholder.svg?height=40&width=40'} alt={mem.publicUserData?.identifier || 'Unknown'} />
                     <AvatarFallback>{(mem.publicUserData?.firstName?.[0] || 'U') + (mem.publicUserData?.lastName?.[0] || '')}</AvatarFallback>
-                    {onlineMembers.has(mem.id) && (
+                    {onlineMembers.has(mem.publicUserData.userId!) && (
                       <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></span>
                     )}
                   </Avatar>
@@ -149,8 +149,8 @@ export default function ImprovedStaffChatComponent() {
                       {mem.role} {mem.publicUserData?.userId === user?.id && "(You)"}
                     </p>
                   </div>
-                  {conversations[mem.id]?.unreadCount > 0 && (
-                    <Badge variant="destructive">{conversations[mem.id].unreadCount}</Badge>
+                  {conversations[mem.publicUserData.userId!]?.unreadCount > 0 && (
+                    <Badge variant="destructive">{conversations[mem.publicUserData.userId!].unreadCount}</Badge>
                   )}
                 </div>
               ))}
@@ -165,14 +165,14 @@ export default function ImprovedStaffChatComponent() {
                 <div className="flex items-center justify-between p-4 border-b">
                   <div className="flex items-center space-x-4">
                     <Avatar>
-                      <AvatarImage src={memberships?.data?.find(mem => mem.id === selectedMember)?.publicUserData.imageUrl || '/placeholder.svg?height=40&width=40'} 
-                                   alt={memberships?.data?.find(mem => mem.id === selectedMember)?.publicUserData.identifier || 'Unknown'} />
-                      <AvatarFallback>{memberships?.data?.find(mem => mem.id === selectedMember)?.publicUserData.firstName?.[0] || 'U'}</AvatarFallback>
+                      <AvatarImage src={memberships?.data?.find(mem => mem.publicUserData.userId! === selectedMember)?.publicUserData.imageUrl || '/placeholder.svg?height=40&width=40'} 
+                                   alt={memberships?.data?.find(mem => mem.publicUserData.userId! === selectedMember)?.publicUserData.identifier || 'Unknown'} />
+                      <AvatarFallback>{memberships?.data?.find(mem => mem.publicUserData.userId! === selectedMember)?.publicUserData.firstName?.[0] || 'U'}</AvatarFallback>
                     </Avatar>
                     <div>
-                      <h2 className="font-semibold">{memberships?.data?.find(mem => mem.id === selectedMember)?.publicUserData.identifier}</h2>
+                      <h2 className="font-semibold">{memberships?.data?.find(mem => mem.publicUserData.userId! === selectedMember)?.publicUserData.identifier}</h2>
                       <p className="text-sm text-muted-foreground">
-                        {memberships?.data?.find(mem => mem.id === selectedMember)?.role}
+                        {memberships?.data?.find(mem => mem.publicUserData.userId! === selectedMember)?.role}
                         {onlineMembers.has(selectedMember) && " • Online"}
                       </p>
                     </div>
@@ -206,9 +206,9 @@ export default function ImprovedStaffChatComponent() {
                       >
                         {!isCurrentUser && showAvatar && (
                           <Avatar className="w-6 h-6">
-                            <AvatarImage src={memberships?.data?.find(mem => mem.id === message.senderId)?.publicUserData.imageUrl || '/placeholder.svg?height=24&width=24'} 
-                                         alt={memberships?.data?.find(mem => mem.id === message.senderId)?.publicUserData.identifier || 'Unknown'} />
-                            <AvatarFallback>{memberships?.data?.find(mem => mem.id === message.senderId)?.publicUserData.firstName?.[0] || 'U'}</AvatarFallback>
+                            <AvatarImage src={memberships?.data?.find(mem => mem.publicUserData.userId! === message.senderId)?.publicUserData.imageUrl || '/placeholder.svg?height=24&width=24'} 
+                                         alt={memberships?.data?.find(mem => mem.publicUserData.userId! === message.senderId)?.publicUserData.identifier || 'Unknown'} />
+                            <AvatarFallback>{memberships?.data?.find(mem => mem.publicUserData.userId! === message.senderId)?.publicUserData.firstName?.[0] || 'U'}</AvatarFallback>
                           </Avatar>
                         )}
                         <div
