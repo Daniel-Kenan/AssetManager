@@ -19,6 +19,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
 
 export const OrgMembers = () => {
   const { user } = useUser()
@@ -259,22 +260,21 @@ export const OrgInviteMemberForm = () => {
   }
 
   return (
-    <form onSubmit={onSubmit} className="space-y-4">
-      <input
+    <div className="flex flex-col sm:flex-row gap-2">
+    <form onSubmit={onSubmit} className="flex flex-col sm:flex-row items-center gap-2">
+      <Input
         name="email"
         type="text"
         placeholder="Email address"
         value={emailAddress}
         onChange={(e) => setEmailAddress(e.target.value)}
-        className="w-full p-2 border rounded"
+        
       />
-      <div>
-        <label className="block mb-2">Role</label>
         <SelectRole fieldName={"role"} />
-      </div>
       <Button type="submit" disabled={disabled}>
         Invite
       </Button>
     </form>
+    </div>
   )
 }

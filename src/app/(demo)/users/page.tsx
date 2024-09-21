@@ -13,7 +13,7 @@ import {
 
 export default function UsersPage() {
   return (
-    <ContentLayout title="Users">
+    <ContentLayout title="Collaborator Management">
       <Breadcrumb>
         <BreadcrumbList>
           <BreadcrumbItem>

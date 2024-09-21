@@ -43,6 +43,7 @@ export const SelectRole = ({
       aria-disabled={isDisabled}
       onChange={onChange}
       defaultValue={defaultRole}
+       className="w-full sm:w-auto p-2 border border-gray-300 rounded focus:ring focus:ring-blue-200"
     >
       {fetchedRoles?.map((roleKey) => (
         <option key={roleKey} value={roleKey}>

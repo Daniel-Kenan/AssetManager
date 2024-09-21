@@ -118,21 +118,7 @@ export default function Component() {
                     className="pl-8"
                   />
                 </div>
-                <div className="flex flex-col sm:flex-row gap-2">
-                  <Input
-                    placeholder="New user email"
-                    value={newUserEmail}
-                    onChange={(e) => setNewUserEmail(e.target.value)}
-                  />
-                  <Button onClick={handleInviteUser} disabled={isInviting}>
-                    {isInviting ? (
-                      <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white mr-2" />
-                    ) : (
-                      <PlusCircle className="mr-2 h-4 w-4" />
-                    )}
-                    {isInviting ? "Inviting..." : "Invite User"}
-                  </Button>
-                </div>
+                <OrgInviteMemberForm/>
               </div>
 
               <div className="rounded-md border">

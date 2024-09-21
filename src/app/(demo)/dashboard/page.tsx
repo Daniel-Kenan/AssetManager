@@ -36,6 +36,7 @@ export default function DashboardPage() {
 
   return (
     <ContentLayout title="Dashboard">
+      
          <h1 className="text-xl font-bold">Welcome back <span className="text-2xl font-bold">🌟</span>, it&apos;s time to get productive</h1>
          <div className="flex justify-between mt-4 w-full">
       <Component/>
