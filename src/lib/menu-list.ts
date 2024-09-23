@@ -84,32 +84,11 @@ export function getMenuList(pathname: string): Group[] {
         }
         ,
         {
-          href: "",
+          href: "/Projects",
           label: "Projects",
-          active: pathname.includes("/posts"),
+          active: pathname.includes("/projects"),
           icon: SquareParking,
-          submenus: [
-            {
-              href: "/Projects",
-              label: "- Projects Summary -",
-              active: pathname === "/posts"
-            },
-            {
-              href: "/posts/new",
-              label: "New Post",
-              active: pathname === "/posts/new"
-            },
-            {
-              href: "/posts",
-              label: "All Posts",
-              active: pathname === "/posts"
-            },
-            {
-              href: "/posts/new",
-              label: "New Post",
-              active: pathname === "/posts/new"
-            }
-          ]
+          submenus: []
         }
       ]
     },
