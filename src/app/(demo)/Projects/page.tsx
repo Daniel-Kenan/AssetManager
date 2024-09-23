@@ -127,6 +127,7 @@ export default function CompanyProjects() {
     setSelectedProject(project)
     // In a real application, you would navigate to the project details page here
     console.log("Navigating to project:", project.name)
+    location.href="/project"
   }
 
   const getStakeColor = (stake: string) => {
