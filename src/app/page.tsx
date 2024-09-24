@@ -1,5 +1,4 @@
 "use client"
-
 import { useEffect } from "react"
 import Link from "next/link"
 import Image from "next/image"
@@ -23,22 +22,32 @@ export default function HomePage() {
       document.head.appendChild(link)
     })
 
-    const toggleButton = document.createElement("button")
-    toggleButton.id = "toggleChatbot"
-    toggleButton.innerHTML = '<i class="fas fa-comment-dots"></i>'
-    setTimeout(() => {
-      document.body.appendChild(toggleButton)
-    }, 1950)
+    let toggleButton;
 
-    const chatbot = document.createElement("div")
-    chatbot.id = "chatbot"
-    chatbot.innerHTML = `<iframe src="${url}/chatbot?param=0&param2=1&accessToken=$udwnurery43gfbhfbuy4" style="width: 100%; height: 100%; border: none;"></iframe>`
-    document.body.appendChild(chatbot)
+    if (window.location.pathname === "/") {
+      toggleButton = document.createElement("button");
+      toggleButton.id = "toggleChatbot";
+      toggleButton.innerHTML = '<i class="fas fa-comment-dots"></i>';
+  
+      // Append the button to the document body after a delay
+      setTimeout(() => {
+        document.body.appendChild(toggleButton);
+      }, 1650);
+      setInterval(()=>{ 
+        if(window.location.pathname != "/")
+   toggleButton.style.display = "none";
+      },500)
 
-    toggleButton.addEventListener("click", function () {
-      chatbot.classList.toggle("chatbot-visible")
-      console.log(chatbot.classList)
-    })
+      const chatbot = document.createElement("div")
+      chatbot.id = "chatbot"
+      chatbot.innerHTML = `<iframe src="${url}/chatbot?param=0&param2=1&accessToken=$udwnurery43gfbhfbuy4" style="width: 100%; height: 100%; border: none;"></iframe>`
+      document.body.appendChild(chatbot)
+
+      toggleButton.addEventListener("click", function () {
+        chatbot.classList.toggle("chatbot-visible")
+        console.log(chatbot.classList)
+      })
+    }
   }, [])
 
   return (
