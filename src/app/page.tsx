@@ -22,7 +22,7 @@ export default function HomePage() {
       document.head.appendChild(link)
     })
 
-    let toggleButton;
+    let toggleButton:HTMLButtonElement | undefined;
 
     if (window.location.pathname === "/") {
       toggleButton = document.createElement("button");
@@ -31,11 +31,12 @@ export default function HomePage() {
   
       // Append the button to the document body after a delay
       setTimeout(() => {
-        document.body.appendChild(toggleButton);
+        document.body.appendChild(toggleButton!);
       }, 1650);
+      
       setInterval(()=>{ 
         if(window.location.pathname != "/")
-   toggleButton.style.display = "none";
+   toggleButton!.style.display = "none";
       },500)
 
       const chatbot = document.createElement("div")
