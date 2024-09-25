@@ -33,12 +33,14 @@ export default function HomePage() {
       setTimeout(() => {
         document.body.appendChild(toggleButton!);
       }, 1650);
-      
+
       setInterval(()=>{ 
         if(window.location.pathname != "/")
    toggleButton!.style.display = "none";
       },500)
-
+    toggleButton.style.setProperty('border', '0.5px solid white', 'important');
+    toggleButton.style.setProperty ('background-color','black','important');
+    
       const chatbot = document.createElement("div")
       chatbot.id = "chatbot"
       chatbot.innerHTML = `<iframe src="${url}/chatbot?param=0&param2=1&accessToken=$udwnurery43gfbhfbuy4" style="width: 100%; height: 100%; border: none;"></iframe>`
@@ -48,6 +50,8 @@ export default function HomePage() {
         chatbot.classList.toggle("chatbot-visible")
         console.log(chatbot.classList)
       })
+      // toggleButton.style.setProperty ('margin-top','3px','important');
+      
     }
   }, [])
 
@@ -109,6 +113,13 @@ export default function HomePage() {
                   priority
                   className="rounded-xl shadow-lg transition duration-300 group-hover:scale-[1.02] group-hover:shadow-xl dark:hidden"
                 />
+                <Image
+              src="/demo-mobile-light-min.png"
+              width={150}
+              height={1000}
+              alt="demo-mobile"
+              className="border rounded-xl absolute bottom-0 right-0 hidden lg:block dark:hidden"
+            />
                 <Image
                   src="/Screenshot-dark.png"
                   width={1080}
