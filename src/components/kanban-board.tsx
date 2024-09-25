@@ -50,7 +50,7 @@ const initialData: { stages: { [key: string]: Stage }, stageOrder: string[] } = 
           value: 10000, 
           probability: 'medium', 
           description: 'Interested in our premium package.', 
-          image: '/placeholder.svg?height=100&width=200',
+          image: '/company1.webp',
           contacts: [{ name: 'John Doe', email: 'john@techcorp.com', phone: '123-456-7890' }],
           assignedTeam: ['Alice', 'Bob']
         },
@@ -60,7 +60,7 @@ const initialData: { stages: { [key: string]: Stage }, stageOrder: string[] } = 
           value: 5000, 
           probability: 'low', 
           description: 'Requested a demo next week.', 
-          image: '/placeholder.svg?height=100&width=200',
+          image: '/company2.webp',
           contacts: [{ name: 'Jane Smith', email: 'jane@innosoft.com', phone: '987-654-3210' }],
           assignedTeam: ['Charlie']
         },
@@ -76,7 +76,7 @@ const initialData: { stages: { [key: string]: Stage }, stageOrder: string[] } = 
           value: 15000, 
           probability: 'high', 
           description: 'Very positive after the initial meeting.', 
-          image: '/placeholder.svg?height=100&width=200',
+          image: '/company3.webp',
           contacts: [{ name: 'Mike Johnson', email: 'mike@datadrive.com', phone: '456-789-0123' }],
           assignedTeam: ['David', 'Eve']
         },
@@ -92,7 +92,7 @@ const initialData: { stages: { [key: string]: Stage }, stageOrder: string[] } = 
           value: 20000, 
           probability: 'medium', 
           description: 'Proposal sent, awaiting feedback.', 
-          image: '/placeholder.svg?height=100&width=200',
+          image: '/company4.webp',
           contacts: [{ name: 'Sarah Brown', email: 'sarah@cloudnine.com', phone: '789-012-3456' }],
           assignedTeam: ['Frank']
         },
@@ -415,7 +415,8 @@ export default function Component() {
                                           <img
                                             src={deal.image}
                                             alt={`${deal.company} deal`}
-                                            className="w-full h-auto rounded mb-2"
+                                            className="w-full h-32 rounded mb-2 "
+
                                           />
                                         )}
                                         <div className="flex items-center space-x-2 text-sm text-gray-500">
