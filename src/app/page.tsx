@@ -105,23 +105,19 @@ export default function HomePage() {
             <div className="relative group">
               <div className="absolute -inset-0.5 bg-gradient-to-r from-primary to-primary-foreground rounded-xl blur opacity-0 group-hover:opacity-75 transition duration-1000 group-hover:duration-200"></div>
               <div className="relative">
+              <Image
+  src="/playback.gif"
+  width={1080}
+  height={608}
+  alt="Uniteer dashboard demo"
+  priority
+  style={{ borderWidth: '0.1px', borderColor: 'grey', borderStyle: 'solid' }}
+  className="rounded-xl shadow-lg transition duration-300 group-hover:scale-[1.02] group-hover:shadow-xl dark:hidden"
+/>
+
+               
                 <Image
-                  src="/Screenshot.png"
-                  width={1080}
-                  height={608}
-                  alt="Uniteer dashboard demo"
-                  priority
-                  className="rounded-xl shadow-lg transition duration-300 group-hover:scale-[1.02] group-hover:shadow-xl dark:hidden"
-                />
-                <Image
-              src="/demo-mobile-light-min.png"
-              width={150}
-              height={1000}
-              alt="demo-mobile"
-              className="border rounded-xl absolute bottom-0 right-0 hidden lg:block dark:hidden"
-            />
-                <Image
-                  src="/Screenshot-dark.png"
+                  src="/playbackdark.png"
                   width={1080}
                   height={608}
                   alt="Uniteer dashboard demo"
