@@ -117,7 +117,7 @@ export default function HomePage() {
 
                
                 <Image
-                  src="/playbackdark.png"
+                  src="/playbackdark.gif"
                   width={1080}
                   height={608}
                   alt="Uniteer dashboard demo"
