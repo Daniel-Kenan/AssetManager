@@ -1,0 +1,25 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+ provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id       Int    @id @default(autoincrement()) // Automatically incrementing ID
+  clerkId  String @unique // Clerk ID must be unique
+  email    String // Email of the user
+  name     String? // Name of the user, optional
+  notes    Note[] // Relation to notes
+}
+
+model Note {
+  id      String @id @default(cuid())
+  title   String
+  content String
+  color   String
+  userId  Int // Change this to Int
+  user    User @relation(fields: [userId], references: [id])
+}
