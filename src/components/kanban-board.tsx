@@ -4,7 +4,7 @@ import React, { useState } from 'react'
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd'
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { AlertCircle, AlertTriangle, CheckCircle2, Plus, DollarSign, MoreVertical, Image as ImageIcon, Users, Phone, Mail, X, Edit, Save } from 'lucide-react'
+import { AlertCircle, AlertTriangle, CheckCircle2, Plus, DollarSign, MoreVertical, Image as ImageIcon, Users, Phone, Mail, X, Edit, Save, DownloadIcon, SearchIcon } from 'lucide-react'
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
@@ -14,6 +14,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogD
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Label } from "@/components/ui/label"
 import { ScrollArea } from "@/components/ui/scroll-area"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 
 interface Contact {
   name: string
@@ -50,7 +51,7 @@ const initialData: { stages: { [key: string]: Stage }, stageOrder: string[] } = 
           value: 10000, 
           probability: 'medium', 
           description: 'Interested in our premium package.', 
-          image: '/company1.webp',
+          image: '/placeholder.svg?height=100&width=200',
           contacts: [{ name: 'John Doe', email: 'john@techcorp.com', phone: '123-456-7890' }],
           assignedTeam: ['Alice', 'Bob']
         },
@@ -60,7 +61,7 @@ const initialData: { stages: { [key: string]: Stage }, stageOrder: string[] } = 
           value: 5000, 
           probability: 'low', 
           description: 'Requested a demo next week.', 
-          image: '/company2.webp',
+          image: '/placeholder.svg?height=100&width=200',
           contacts: [{ name: 'Jane Smith', email: 'jane@innosoft.com', phone: '987-654-3210' }],
           assignedTeam: ['Charlie']
         },
@@ -76,7 +77,7 @@ const initialData: { stages: { [key: string]: Stage }, stageOrder: string[] } = 
           value: 15000, 
           probability: 'high', 
           description: 'Very positive after the initial meeting.', 
-          image: '/company3.webp',
+          image: '/placeholder.svg?height=100&width=200',
           contacts: [{ name: 'Mike Johnson', email: 'mike@datadrive.com', phone: '456-789-0123' }],
           assignedTeam: ['David', 'Eve']
         },
@@ -92,7 +93,7 @@ const initialData: { stages: { [key: string]: Stage }, stageOrder: string[] } = 
           value: 20000, 
           probability: 'medium', 
           description: 'Proposal sent, awaiting feedback.', 
-          image: '/company4.webp',
+          image: '/placeholder.svg?height=100&width=200',
           contacts: [{ name: 'Sarah Brown', email: 'sarah@cloudnine.com', phone: '789-012-3456' }],
           assignedTeam: ['Frank']
         },
@@ -134,6 +135,8 @@ export default function Component() {
   const [isDetailsPanelOpen, setIsDetailsPanelOpen] = useState(false)
   const [isEditing, setIsEditing] = useState(false)
   const [editedDeal, setEditedDeal] = useState<Deal | null>(null)
+  const [viewMode, setViewMode] = useState<'kanban' | 'table'>('kanban')
+  const [searchTerm, setSearchTerm] = useState('')
 
   const onDragEnd = (result: any) => {
     const { destination, source, draggableId, type } = result
@@ -332,247 +335,349 @@ export default function Component() {
     setEditedDeal(null)
   }
 
+  const allDeals = data.stageOrder.flatMap(stageId => data.stages[stageId].deals)
+
+  const filteredDeals = allDeals.filter(deal =>
+    deal.company.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    deal.description.toLowerCase().includes(searchTerm.toLowerCase())
+  )
+
+  const exportToCSV = () => {
+    const headers = ['Company', 'Value', 'Probability', 'Description', 'Contacts', 'Assigned Team', 'Stage']
+    const csvContent = [
+      headers.join(','),
+      ...filteredDeals.map(deal => [
+        deal.company,
+        deal.value,
+        deal.probability,
+        `"${deal.description.replace(/"/g, '""')}"`,
+        `"${deal.contacts.map(c => `${c.name} (${c.email})`).join('; ')}"`,
+        `"${deal.assignedTeam.join('; ')}"`,
+        Object.keys(data.stages).find(key => data.stages[key].deals.some(d => d.id === deal.id)) || ''
+      ].join(','))
+    ].join('\n')
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
+    const link = document.createElement('a')
+    if (link.download !== undefined) {
+      const url = URL.createObjectURL(blob)
+      link.setAttribute('href', url)
+      link.setAttribute('download', 'deals_export.csv')
+      link.style.visibility = 'hidden'
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+    }
+  }
+
   return (
     <div className="p-4">
-
-      <div className="mb-4 flex space-x-2">
-        <Input
-          type="text"
-          placeholder="New stage name"
-          value={newStageName}
-          onChange={(e) => setNewStageName(e.target.value)}
-          className="max-w-xs"
-        />
-        <Button onClick={addNewStage}>Add Stage</Button>
+      <div className="mb-4 flex justify-between items-center">
+        <div className="flex space-x-2">
+          <Input
+            type="text"
+            placeholder="New stage name"
+            value={newStageName}
+            onChange={(e) => setNewStageName(e.target.value)}
+            className="max-w-xs"
+          />
+          <Button  onClick={addNewStage}>Add Stage</Button>
+        </div>
+        <div className="flex space-x-2">
+          <Button onClick={() => setViewMode(viewMode === 'kanban' ? 'table' : 'kanban')}>
+            {viewMode === 'kanban' ? 'Switch to Table View' : 'Switch to Kanban View'}
+          </Button>
+          {viewMode === 'table' && (
+            <Button onClick={exportToCSV}>
+              <DownloadIcon className="mr-2 h-4 w-4" />
+              Export to CSV
+            </Button>
+          )}
+        </div>
       </div>
-      <DragDropContext onDragEnd={onDragEnd}>
-        <Droppable droppableId="all-stages" direction="horizontal" type="stage">
-          {(provided) => (
-            <div 
-              {...provided.droppableProps} 
-              ref={provided.innerRef}
-              className="flex space-x-4 overflow-x-auto pb-4"
-            >
-              {data.stageOrder.map((stageId, index) => {
-                const stage = data.stages[stageId]
-                return (
-                  <Draggable key={stage.id} draggableId={stage.id} index={index}>
-                    {(provided) => (
-                      <div
-                        ref={provided.innerRef}
-                        {...provided.draggableProps}
-                        className="w-64 flex-shrink-0"
-                      >
-                        <div className="flex items-center justify-between mb-2">
-                          <h2 
-                            className="font-semibold cursor-move" 
-                            {...provided.dragHandleProps}
-                          >
-                            {stage.title}
-                          </h2>
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="sm">
-                                <MoreVertical className="h-4 w-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent>
-                              <DropdownMenuItem onSelect={() => setDeletingStage(stage.id)}>
-                                Delete Stage
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </div>
-                        <Droppable droppableId={stage.id} type="deal">
-                          {(provided) => (
-                            <div
-                              {...provided.droppableProps}
-                              ref={provided.innerRef}
-                              className="bg-gray-100 p-2 rounded min-h-[500px]"
-                            >
-                              {stage.deals.map((deal, index) => (
-                                <Draggable key={deal.id} draggableId={deal.id} index={index}>
-                                  {(provided) => (
-                                    <Card
-                                      ref={provided.innerRef}
-                                      {...provided.draggableProps}
-                                      {...provided.dragHandleProps}
-                                      className="mb-2 bg-white cursor-pointer"
-                                      onClick={() => {
-                                        setSelectedDeal(deal)
-                                        setIsDetailsPanelOpen(true)
-                                        setIsEditing(false)
-                                      }}
-                                    >
-                                      <CardHeader className="p-3 flex flex-row items-center justify-between space-y-0">
-                                        <CardTitle className="text-sm font-medium">
-                                          {deal.company}
-                                        </CardTitle>
-                                        <ProbabilityIcon probability={deal.probability} />
-                                      </CardHeader>
-                                      <CardContent className="p-3 pt-0">
-                                        {deal.image && (
-                                          <img
-                                            src={deal.image}
-                                            alt={`${deal.company} deal`}
-                                            className="w-full h-32 rounded mb-2 "
 
-                                          />
-                                        )}
-                                        <div className="flex items-center space-x-2 text-sm text-gray-500">
-                                          {/* <DollarSign className="h-4 w-4" /> */}
-                                          <span>{deal.value.toLocaleString('en-US', { style: 'currency', currency: 'ZAR' })}</span>
-                                        </div>
-                                        <Badge 
-                                          variant={deal.probability === 'high' ? 'default' : deal.probability === 'medium' ? 'secondary' : 'destructive'}
-                                          className="mt-2"
-                                        >
-                                          {deal.probability}
-                                        </Badge>
-                                        <p className="text-sm text-gray-500 mt-2 line-clamp-2">{deal.description}</p>
-                                        <div className="flex items-center space-x-2 text-sm text-gray-500 mt-2">
-                                          <Users className="h-4 w-4" />
-                                          <span>{deal.assignedTeam.join(', ')}</span>
-                                        </div>
-                                        <div className="mt-2 space-y-1">
-                                          {deal.contacts.map((contact, index) => (
-                                            <div key={index} className="flex items-center space-x-2 text-sm text-gray-500">
-                                              <Phone className="h-3 w-3" />
-                                              <span>{contact.name}</span>
-                                            </div>
-                                          ))}
-                                        </div>
-                                      </CardContent>
-                                    </Card>
-                                  )}
-                                </Draggable>
-                              ))}
-                              {provided.placeholder}
-                              {addingDealToStage === stage.id ? (
-                                <div className="mt-2 space-y-2">
-                                  <Input
-                                    type="text"
-                                    placeholder="Company name"
-                                    value={newDealCompany}
-                                    onChange={(e) => setNewDealCompany(e.target.value)}
-                                  />
-                                  <Input
-                                    type="number"
-                                    placeholder="Deal value"
-                                    value={newDealValue}
-                                    onChange={(e) => setNewDealValue(e.target.value)}
-                                  />
-                                  <Select
-                                    value={newDealProbability}
-                                    onValueChange={(value: Deal['probability']) => setNewDealProbability(value)}
-                                  >
-                                    <SelectTrigger>
-                                      <SelectValue placeholder="Select probability" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                      <SelectItem value="low">Low</SelectItem>
-                                      <SelectItem value="medium">Medium</SelectItem>
-                                      <SelectItem value="high">High</SelectItem>
-                                    </SelectContent>
-                                  </Select>
-                                  <div>
-                                    <Label htmlFor="image-url" className="text-sm font-medium">
-                                      Image URL (optional)
-                                    </Label>
-                                    <div className="flex mt-1">
-                                      <Input
-                                        id="image-url"
-                                        type="text"
-                                        placeholder="https://example.com/image.jpg"
-                                        value={newDealImage}
-                                        onChange={(e) => setNewDealImage(e.target.value)}
-                                        className="flex-grow"
-                                      />
-                                      <Button
-                                        type="button"
-                                        variant="outline"
-                                        size="icon"
-                                        className="ml-2"
-                                        onClick={() => setNewDealImage('/placeholder.svg?height=100&width=200')}
+      {viewMode === 'kanban' ? (
+        <DragDropContext onDragEnd={onDragEnd}>
+          <Droppable droppableId="all-stages" direction="horizontal" type="stage">
+            {(provided) => (
+              <div 
+                {...provided.droppableProps} 
+                ref={provided.innerRef}
+                className="flex space-x-4 overflow-x-auto pb-4"
+              >
+                {data.stageOrder.map((stageId, index) => {
+                  const stage = data.stages[stageId]
+                  return (
+                    <Draggable key={stage.id} draggableId={stage.id} index={index}>
+                      {(provided) => (
+                        <div
+                          ref={provided.innerRef}
+                          {...provided.draggableProps}
+                          className="w-64 flex-shrink-0"
+                        >
+                          <div className="flex items-center justify-between mb-2">
+                            <h2 
+                              className="font-semibold cursor-move" 
+                              {...provided.dragHandleProps}
+                            >
+                              {stage.title}
+                            </h2>
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="sm">
+                                  <MoreVertical className="h-4 w-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent>
+                                <DropdownMenuItem onSelect={() => setDeletingStage(stage.id)}>
+                                  Delete Stage
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </div>
+                          <Droppable droppableId={stage.id} type="deal">
+                            {(provided) => (
+                              <div
+                                {...provided.droppableProps}
+                                ref={provided.innerRef}
+                                className="bg-gray-100 p-2 rounded min-h-[500px]"
+                              >
+                                {stage.deals.map((deal, index) => (
+                                  <Draggable key={deal.id} draggableId={deal.id} index={index}>
+                                    {(provided) => (
+                                      <Card
+                                        ref={provided.innerRef}
+                                        {...provided.draggableProps}
+                                        {...provided.dragHandleProps}
+                                        className="mb-2 bg-white cursor-pointer"
+                                        onClick={() => {
+                                          setSelectedDeal(deal)
+                                          setIsDetailsPanelOpen(true)
+                                          setIsEditing(false)
+                                        }}
                                       >
-                                        <ImageIcon className="h-4 w-4" />
-                                        <span className="sr-only">Use placeholder image</span>
+                                        <CardHeader className="p-3 flex flex-row items-center justify-between space-y-0">
+                                          <CardTitle className="text-sm font-medium">
+                                            {deal.company}
+                                          </CardTitle>
+                                          <ProbabilityIcon probability={deal.probability} />
+                                        </CardHeader>
+                                        <CardContent className="p-3 pt-0">
+                                          {deal.image && (
+                                            <img
+                                              src={deal.image}
+                                              alt={`${deal.company} deal`}
+                                              className="w-full h-32 rounded mb-2 object-cover"
+                                            />
+                                          )}
+                                          <div className="flex items-center space-x-2 text-sm text-gray-500">
+                                            <span>{deal.value.toLocaleString('en-US', { style: 'currency', currency: 'ZAR' })}</span>
+                                          </div>
+                                          <Badge 
+                                            variant={deal.probability === 'high' ? 'default' : deal.probability === 'medium' ? 'secondary' : 'destructive'}
+                                            className="mt-2"
+                                          >
+                                            {deal.probability}
+                                          </Badge>
+                                          <p className="text-sm text-gray-500 mt-2 line-clamp-2">{deal.description}</p>
+                                          <div className="flex items-center space-x-2 text-sm text-gray-500 mt-2">
+                                            <Users className="h-4 w-4" />
+                                            <span>{deal.assignedTeam.join(', ')}</span>
+                                          </div>
+                                          <div className="mt-2 space-y-1">
+                                            {deal.contacts.map((contact, index) => (
+                                              <div key={index} className="flex items-center space-x-2 text-sm text-gray-500">
+                                                <Phone className="h-3 w-3" />
+                                                <span>{contact.name}</span>
+                                              </div>
+                                            ))}
+                                          </div>
+                                        </CardContent>
+                                      </Card>
+                                    )}
+                                  </Draggable>
+                                ))}
+                                {provided.placeholder}
+                                {addingDealToStage === stage.id ? (
+                                  <div className="mt-2 space-y-2">
+                                    <Input
+                                      type="text"
+                                      placeholder="Company name"
+                                      value={newDealCompany}
+                                      onChange={(e) => setNewDealCompany(e.target.value)}
+                                    />
+                                    <Input
+                                      type="number"
+                                      placeholder="Deal value"
+                                      value={newDealValue}
+                                      onChange={(e) => setNewDealValue(e.target.value)}
+                                    />
+                                    <Select
+                                      value={newDealProbability}
+                                      onValueChange={(value: Deal['probability']) => setNewDealProbability(value)}
+                                    >
+                                      <SelectTrigger>
+                                        <SelectValue placeholder="Select probability" />
+                                      </SelectTrigger>
+                                      <SelectContent>
+                                        <SelectItem value="low">Low</SelectItem>
+                                        <SelectItem value="medium">Medium</SelectItem>
+                                        <SelectItem value="high">High</SelectItem>
+                                      </SelectContent>
+                                    </Select>
+                                    <div>
+                                      <Label htmlFor="image-url" className="text-sm font-medium">
+                                        Image URL (optional)
+                                      </Label>
+                                      <div className="flex mt-1">
+                                        <Input
+                                          id="image-url"
+                                          type="text"
+                                          placeholder="https://example.com/image.jpg"
+                                          value={newDealImage}
+                                          onChange={(e) => setNewDealImage(e.target.value)}
+                                          className="flex-grow"
+                                        />
+                                        <Button
+                                          type="button"
+                                          variant="outline"
+                                          size="icon"
+                                          className="ml-2"
+                                          onClick={() => setNewDealImage('/placeholder.svg?height=100&width=200')}
+                                        >
+                                          <ImageIcon className="h-4 w-4" />
+                                          <span className="sr-only">Use placeholder image</span>
+                                        </Button>
+                                      </div>
+                                    </div>
+                                    <Textarea
+                                      placeholder="Deal description"
+                                      value={newDealDescription}
+                                      onChange={(e) => setNewDealDescription(e.target.value)}
+                                    />
+                                    <div>
+                                      <Label htmlFor="assigned-team" className="text-sm font-medium">
+                                        Assigned Team
+                                      </Label>
+                                      <Input
+                                        id="assigned-team"
+                                        placeholder="Enter team members (comma-separated)"
+                                        value={newDealAssignedTeam.join(', ')}
+                                        onChange={(e) => setNewDealAssignedTeam(e.target.value.split(',').map(s => s.trim()))}
+                                      />
+                                    </div>
+                                    <div>
+                                      <Label className="text-sm font-medium">Contacts</Label>
+                                      {newDealContacts.map((contact, index) => (
+                                        <div key={index} className="space-y-2 mb-2">
+                                          <Input
+                                            placeholder="Name"
+                                            value={contact.name}
+                                            onChange={(e) => updateContact(index, 'name', e.target.value)}
+                                          />
+                                          <Input
+                                            placeholder="Email"
+                                            value={contact.email}
+                                            onChange={(e) => updateContact(index, 'email', e.target.value)}
+                                          />
+                                          <Input
+                                            placeholder="Phone"
+                                            value={contact.phone}
+                                            onChange={(e) => updateContact(index, 'phone', e.target.value)}
+                                          />
+                                          <Button variant="outline" onClick={() => removeContact(index)}>Remove Contact</Button>
+                                        </div>
+                                      ))}
+                                      <Button variant="outline" onClick={addContact} className="w-full mt-2">
+                                        <Plus className="mr-2 h-4 w-4" /> Add Contact
+                                      </Button>
+                                    </div>
+                                    <div className="flex space-x-2">
+                                      <Button onClick={() => addNewDeal(stage.id)} className="flex-1">
+                                        Add Deal
+                                      </Button>
+                                      <Button variant="outline" onClick={() => setAddingDealToStage(null)} className="flex-1">
+                                        Cancel
                                       </Button>
                                     </div>
                                   </div>
-                                  <Textarea
-                                    placeholder="Deal description"
-                                    value={newDealDescription}
-                                    onChange={(e) => setNewDealDescription(e.target.value)}
-                                  />
-                                  <div>
-                                    <Label htmlFor="assigned-team" className="text-sm font-medium">
-                                      Assigned Team
-                                    </Label>
-                                    <Input
-                                      id="assigned-team"
-                                      placeholder="Enter team members (comma-separated)"
-                                      value={newDealAssignedTeam.join(', ')}
-                                      onChange={(e) => setNewDealAssignedTeam(e.target.value.split(',').map(s => s.trim()))}
-                                    />
-                                  </div>
-                                  <div>
-                                    <Label className="text-sm font-medium">Contacts</Label>
-                                    {newDealContacts.map((contact, index) => (
-                                      <div key={index} className="space-y-2 mb-2">
-                                        <Input
-                                          placeholder="Name"
-                                          value={contact.name}
-                                          onChange={(e) => updateContact(index, 'name', e.target.value)}
-                                        />
-                                        <Input
-                                          placeholder="Email"
-                                          value={contact.email}
-                                          onChange={(e) => updateContact(index, 'email', e.target.value)}
-                                        />
-                                        <Input
-                                          placeholder="Phone"
-                                          value={contact.phone}
-                                          onChange={(e) => updateContact(index, 'phone', e.target.value)}
-                                        />
-                                        <Button variant="outline" onClick={() => removeContact(index)}>Remove Contact</Button>
-                                      </div>
-                                    ))}
-                                    <Button variant="outline" onClick={addContact} className="w-full mt-2">
-                                      <Plus className="mr-2 h-4 w-4" /> Add Contact
-                                    </Button>
-                                  </div>
-                                  <div className="flex space-x-2">
-                                    <Button onClick={() => addNewDeal(stage.id)} className="flex-1">
-                                      Add Deal
-                                    </Button>
-                                    <Button variant="outline" onClick={() => setAddingDealToStage(null)} className="flex-1">
-                                      Cancel
-                                    </Button>
-                                  </div>
-                                </div>
-                              ) : (
-                                <Button 
-                                  variant="outline" 
-                                  className="w-full mt-2"
-                                  onClick={() => setAddingDealToStage(stage.id)}
-                                >
-                                  <Plus className="mr-2 h-4 w-4" /> Add Deal
-                                </Button>
-                              )}
-                            </div>
-                          )}
-                        </Droppable>
-                      </div>
-                    )}
-                  </Draggable>
-                )
-              })}
-              {provided.placeholder}
+                                ) : (
+                                  <Button 
+                                    variant="outline" 
+                                    className="w-full mt-2"
+                                    onClick={() => setAddingDealToStage(stage.id)}
+                                  >
+                                    <Plus className="mr-2 h-4 w-4" /> Add Deal
+                                  </Button>
+                                )}
+                              </div>
+                            )}
+                          </Droppable>
+                        </div>
+                      )}
+                    </Draggable>
+                  )
+                })}
+                {provided.placeholder}
+              </div>
+            )}
+          </Droppable>
+        </DragDropContext>
+      ) : (
+        <div className="space-y-4">
+          <div className="flex justify-between items-center">
+            <div className="relative w-64">
+              <SearchIcon className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search deals..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-8"
+              />
             </div>
-          )}
-        </Droppable>
-      </DragDropContext>
+          </div>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Company</TableHead>
+                <TableHead>Value</TableHead>
+                <TableHead>Probability</TableHead>
+                <TableHead>Description</TableHead>
+                <TableHead>Contacts</TableHead>
+                <TableHead>Assigned Team</TableHead>
+                <TableHead>Stage</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filteredDeals.map((deal) => (
+                <TableRow key={deal.id}>
+                  <TableCell>{deal.company}</TableCell>
+                  <TableCell>{deal.value.toLocaleString('en-US', { style: 'currency', currency: 'ZAR' })}</TableCell>
+                  <TableCell>
+                    <Badge 
+                      variant={deal.probability === 'high' ? 'default' : deal.probability === 'medium' ? 'secondary' : 'destructive'}
+                    >
+                      {deal.probability}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>{deal.description}</TableCell>
+                  <TableCell>
+                    {deal.contacts.map((contact, index) => (
+                      <div key={index} className="text-sm">
+                        {contact.name} - {contact.email}
+                      </div>
+                    ))}
+                  </TableCell>
+                  <TableCell>{deal.assignedTeam.join(', ')}</TableCell>
+                  <TableCell>
+                    {Object.keys(data.stages).find(key => data.stages[key].deals.some(d => d.id === deal.id))}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+      )}
       <Dialog open={deletingStage !== null} onOpenChange={() => setDeletingStage(null)}>
         <DialogContent>
           <DialogHeader>
@@ -701,12 +806,11 @@ export default function Component() {
                         <img
                           src={selectedDeal.image}
                           alt={`${selectedDeal.company} deal`}
-                          className="w-full h-auto rounded"
+                          className="w-full h-auto rounded object-cover"
                         />
                       )}
                       <div className="flex items-center justify-between">
                         <div className="flex items-center space-x-2">
-                          {/* <DollarSign className="h-5 w-5" /> */}
                           <span className="text-lg font-semibold">
                             {selectedDeal.value.toLocaleString('en-US', { style: 'currency', currency: 'ZAR' })}
                           </span>
