@@ -8,12 +8,19 @@ datasource db {
 }
 
 model User {
-  id       Int    @id @default(autoincrement()) // Automatically incrementing ID
-  clerkId  String @unique // Clerk ID must be unique
-  email    String // Email of the user
-  name     String? // Name of the user, optional
-  notes    Note[] // Relation to notes
+  id       Int    @id @default(autoincrement()) 
+  clerkId  String @unique 
+  email    String 
+  name     String? 
+  notes    Note[] 
 }
+
+model Organisation{
+  id  String @id @default(cuid())
+  name String
+  clerkId String
+}
+
 
 model Note {
   id      String @id @default(cuid())

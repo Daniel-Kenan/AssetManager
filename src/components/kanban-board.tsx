@@ -494,7 +494,7 @@ export default function Component() {
                                           </div>
                                         </CardContent>
                                       </Card>
-                                    )}
+                                    )}  
                                   </Draggable>
                                 ))}
                                 {provided.placeholder}
